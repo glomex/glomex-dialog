@@ -1,0 +1,42 @@
+{
+  "version": "experimental",
+  "tags": [
+    {
+      "name": "glomex-dialog",
+      "path": "./glomex-dialog.js",
+      "attributes": [
+        {
+          "name": "mode"
+        },
+        {
+          "name": "aspect-ratio"
+        },
+        {
+          "name": "dock-target"
+        },
+        {
+          "name": "dock-target-inset"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aspectRatio",
+          "type": "number"
+        },
+        {
+          "name": "placeholder",
+          "type": "Element | null"
+        },
+        {
+          "name": "dockTarget",
+          "type": "Element | null"
+        }
+      ],
+      "events": [
+        {
+          "name": "toggledialog"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@glomex/glomex-dialog",
+  "version": "1.0.0",
+  "description": "A dialog web component that allows docking a video player or putting it in a lightbox",
+  "type": "module",
+  "main": "glomex-dialog.js",
+  "module": "glomex-dialog.js",
+  "scripts": {
+    "lint": "eslint glomex-dialog.js",
+    "start": "serve",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glomex/glomex-dialog.git"
+  },
+  "keywords": [
+    "webcomponent",
+    "dialog",
+    "video-dock",
+    "docking"
+  ],
+  "author": "glomex GmbH",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/glomex/glomex-dialog/issues"
+  },
+  "homepage": "https://github.com/glomex/glomex-dialog#readme",
+  "devDependencies": {
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.2",
+    "serve": "^11.3.2"
+  }
+}

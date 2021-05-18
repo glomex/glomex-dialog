@@ -211,8 +211,6 @@ export class GlomexDialogElement extends window.HTMLElement {
     let dockTargetRect;
 
     const onMove = (event) => {
-      event.stopPropagation();
-      event.preventDefault();
       const moveCoords = pointerCoords(event);
       this.dockTarget.style.top = `${dockTargetRect.top + moveCoords.y - initialY}px`;
       this.dockTarget.style.left = `${dockTargetRect.left + moveCoords.x - initialX}px`;
@@ -221,13 +219,14 @@ export class GlomexDialogElement extends window.HTMLElement {
       this.refreshDockTarget();
     };
 
-    const mouseUp = (event) => {
-      document.body.removeEventListener('mousemove', onMove, { passive: false });
-      document.body.removeEventListener('touchmove', onMove, { passive: false });
-      dialogOverlay.removeEventListener('mouseup', mouseUp, { passive: false });
-      dialogOverlay.removeEventListener('touchend', mouseUp, { passive: false });
-      event.preventDefault();
-      event.stopPropagation();
+    const mouseUp = () => {
+      document.body.removeEventListener('mousemove', onMove);
+      document.body.removeEventListener('touchmove', onMove);
+      dialogOverlay.removeEventListener('mouseup', mouseUp);
+      dialogOverlay.removeEventListener('touchend', mouseUp);
+      // reset scrolling
+      window.document.body.style.height = null;
+      window.document.body.style.overflow = null;
       setTimeout(() => {
         this._moving = false;
       }, 1);
@@ -236,16 +235,18 @@ export class GlomexDialogElement extends window.HTMLElement {
     const mouseDown = (event) => {
       if (this.getAttribute('mode') !== 'dock') return;
       this._moving = true;
-      event.stopPropagation();
+      // prevent scrolling
+      window.document.body.style.height = '100%';
+      window.document.body.style.overflow = 'hidden';
       const coords = pointerCoords(event);
       initialX = coords.x;
       initialY = coords.y;
       dockTargetRect = this.dockTarget.getBoundingClientRect();
 
-      document.body.addEventListener('mousemove', onMove, { passive: false });
-      document.body.addEventListener('touchmove', onMove, { passive: false });
-      dialogOverlay.addEventListener('mouseup', mouseUp, { passive: false });
-      dialogOverlay.addEventListener('touchend', mouseUp, { passive: false });
+      document.body.addEventListener('mousemove', onMove);
+      document.body.addEventListener('touchmove', onMove);
+      dialogOverlay.addEventListener('mouseup', mouseUp);
+      dialogOverlay.addEventListener('touchend', mouseUp);
     };
 
     if (this.dockTarget === dockTarget) {

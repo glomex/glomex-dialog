@@ -57,6 +57,8 @@ export default () => {
       <video
         class="video-element"
         controls
+        playsinline
+        webkit-playsinline
         preload="none"
         src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
@@ -108,6 +110,8 @@ export default () => {
       <video
         class="video-element"
         controls
+        playsinline
+        webkit-playsinline
         preload="none"
         src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
@@ -153,6 +157,8 @@ export default () => {
       <video
         class="video-element"
         controls
+        playsinline
+        webkit-playsinline
         preload="none"
         src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
@@ -234,6 +240,8 @@ export default () => {
       <video
         class="video-element"
         controls
+        playsinline
+        webkit-playsinline
         preload="none"
         src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
@@ -281,6 +289,8 @@ export default () => {
         <video
           class="video-element"
           controls
+          playsinline
+          webkit-playsinline
           preload="none"
           src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">

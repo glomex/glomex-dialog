@@ -378,8 +378,68 @@ export class GlomexDialogElement extends window.HTMLElement {
 
   get dockTarget() {
     const dockTarget = this.getAttribute('dock-target');
-    return (dockTarget && document.querySelector(dockTarget)) || this.shadowRoot.querySelector('.dock-target');
+    let dockTargetElement;
+    if (dockTarget) {
+      dockTargetElement = document.querySelector(dockTarget);
+      const intersection = getViewportIntersection(dockTargetElement);
+      if (intersection && intersection.width > 0 && intersection.height > 0) {
+        return dockTargetElement;
+      }
+    }
+    return this.shadowRoot.querySelector('.dock-target');
   }
+}
+
+/*
+ * Viewport intersection logic partially copied from
+ * https://github.com/ampproject/amphtml/blob/bf50181843d8520cd017f6fab94740c6727416a5/extensions/amp-video-docking/0.1/amp-video-docking.js
+ */
+function getViewportIntersection(elem) {
+  const viewportRect = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    left: 0,
+    top: 0
+  };
+  const rect = elem.getBoundingClientRect();
+  return rectIntersection(viewportRect, rect);
+}
+
+function layoutRectLtwh(left, top, width, height) {
+  return {
+    left,
+    top,
+    width,
+    height,
+    bottom: top + height,
+    right: left + width,
+    x: left,
+    y: top,
+  };
+}
+
+function rectIntersection() {
+  let x0 = -Infinity;
+  let x1 = Infinity;
+  let y0 = -Infinity;
+  let y1 = Infinity;
+  for (let i = 0; i < arguments.length; i++) {
+    const current = arguments[i];
+    if (!current) {
+      continue;
+    }
+    x0 = Math.max(x0, current.left);
+    x1 = Math.min(x1, current.left + current.width);
+    y0 = Math.max(y0, current.top);
+    y1 = Math.min(y1, current.top + current.height);
+    if (x1 < x0 || y1 < y0) {
+      return null;
+    }
+  }
+  if (x1 == Infinity) {
+    return null;
+  }
+  return layoutRectLtwh(x0, y0, x1 - x0, y1 - y0);
 }
 
 if (!window.customElements.get('glomex-dialog')) {

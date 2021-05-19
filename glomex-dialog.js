@@ -219,13 +219,9 @@ export class GlomexDialogElement extends window.HTMLElement {
       this.refreshDockTarget();
     };
 
-    const disconnectListeners = () => {
-      document.body.removeEventListener('mousemove', onMove);
-      document.body.removeEventListener('touchmove', onMove);
-      document.body.removeEventListener('mouseup', mouseUp);
-      document.body.removeEventListener('touchend', mouseUp);
-      window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
-    }
+    const onNonPassiveTouchMove = (event) => {
+      event.preventDefault();
+    };
 
     const mouseUp = () => {
       disconnectListeners();
@@ -235,10 +231,6 @@ export class GlomexDialogElement extends window.HTMLElement {
       setTimeout(() => {
         this._moving = false;
       }, 1);
-    };
-
-    const onNonPassiveTouchMove = (event) => {
-      event.preventDefault();
     };
 
     const mouseDown = (event) => {
@@ -261,6 +253,14 @@ export class GlomexDialogElement extends window.HTMLElement {
       document.body.addEventListener('mouseup', mouseUp);
       document.body.addEventListener('touchend', mouseUp);
     };
+
+    function disconnectListeners() {
+      document.body.removeEventListener('mousemove', onMove);
+      document.body.removeEventListener('touchmove', onMove);
+      document.body.removeEventListener('mouseup', mouseUp);
+      document.body.removeEventListener('touchend', mouseUp);
+      window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
+    }
 
     if (this.dockTarget === dockTarget) {
       // get hover working on iOS
@@ -412,17 +412,6 @@ export class GlomexDialogElement extends window.HTMLElement {
  * Viewport intersection logic partially copied from
  * https://github.com/ampproject/amphtml/blob/bf50181843d8520cd017f6fab94740c6727416a5/extensions/amp-video-docking/0.1/amp-video-docking.js
  */
-function getViewportIntersection(elem) {
-  const viewportRect = {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    left: 0,
-    top: 0,
-  };
-  const rect = elem.getBoundingClientRect();
-  return rectIntersection(viewportRect, rect);
-}
-
 function layoutRectLtwh(left, top, width, height) {
   return {
     left,
@@ -436,6 +425,7 @@ function layoutRectLtwh(left, top, width, height) {
   };
 }
 
+/* eslint-disable */
 function rectIntersection() {
   let x0 = -Infinity;
   let x1 = Infinity;
@@ -458,6 +448,18 @@ function rectIntersection() {
     return null;
   }
   return layoutRectLtwh(x0, y0, x1 - x0, y1 - y0);
+}
+/* eslint-enable */
+
+function getViewportIntersection(elem) {
+  const viewportRect = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    left: 0,
+    top: 0,
+  };
+  const rect = elem.getBoundingClientRect();
+  return rectIntersection(viewportRect, rect);
 }
 
 if (!window.customElements.get('glomex-dialog')) {

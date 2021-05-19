@@ -219,17 +219,26 @@ export class GlomexDialogElement extends window.HTMLElement {
       this.refreshDockTarget();
     };
 
-    const mouseUp = () => {
+    const disconnectListeners = () => {
       document.body.removeEventListener('mousemove', onMove);
       document.body.removeEventListener('touchmove', onMove);
-      dialogOverlay.removeEventListener('mouseup', mouseUp);
-      dialogOverlay.removeEventListener('touchend', mouseUp);
+      document.body.removeEventListener('mouseup', mouseUp);
+      document.body.removeEventListener('touchend', mouseUp);
+      window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
+    }
+
+    const mouseUp = () => {
+      disconnectListeners();
       // reset scrolling
       window.document.body.style.height = null;
       window.document.body.style.overflow = null;
       setTimeout(() => {
         this._moving = false;
       }, 1);
+    };
+
+    const onNonPassiveTouchMove = (event) => {
+      event.preventDefault();
     };
 
     const mouseDown = (event) => {
@@ -243,13 +252,19 @@ export class GlomexDialogElement extends window.HTMLElement {
       initialY = coords.y;
       dockTargetRect = this.dockTarget.getBoundingClientRect();
 
+      disconnectListeners();
+
+      // prevent document scrolling on iOS
+      window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
       document.body.addEventListener('mousemove', onMove);
       document.body.addEventListener('touchmove', onMove);
-      dialogOverlay.addEventListener('mouseup', mouseUp);
-      dialogOverlay.addEventListener('touchend', mouseUp);
+      document.body.addEventListener('mouseup', mouseUp);
+      document.body.addEventListener('touchend', mouseUp);
     };
 
     if (this.dockTarget === dockTarget) {
+      // get hover working on iOS
+      document.documentElement.addEventListener('touchstart', () => {});
       dialogOverlay.addEventListener('mousedown', mouseDown);
       dialogOverlay.addEventListener('touchstart', mouseDown);
     }
@@ -307,6 +322,7 @@ export class GlomexDialogElement extends window.HTMLElement {
         window.document.body.style.height = '100%';
         window.document.body.style.overflow = 'hidden';
         dialogContent.setAttribute('style', '');
+        // TODO: rethink focus-handling?
         dialogContent.setAttribute('tabindex', '-1');
         dialogContent.focus();
       } else if (!newValue) {
@@ -401,7 +417,7 @@ function getViewportIntersection(elem) {
     width: window.innerWidth,
     height: window.innerHeight,
     left: 0,
-    top: 0
+    top: 0,
   };
   const rect = elem.getBoundingClientRect();
   return rectIntersection(viewportRect, rect);

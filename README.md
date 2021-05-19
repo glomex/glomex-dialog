@@ -1,9 +1,13 @@
 # glomex-dialog
 
 A dialog web component that allows docking a video player or putting it in a lightbox.
-It allows implementing a similar feature as https://amp.dev/documentation/examples/multimedia-animations/advanced_video_docking/ but without AMP.
+It allows implementing a similar feature as [amp-video-docking](https://amp.dev/documentation/examples/multimedia-animations/advanced_video_docking/) but without using AMP.
 
-See an example here: http://unpkg.com/@glomex/glomex-dialog/index.html
+For a formatted view of this document, please visit: http://unpkg.com/@glomex/glomex-dialog/index.html
+
+## Testing
+
+Checkout this project, do `npm install`, `npm start` and visit http://localhost:5000.
 
 ## Usage
 
@@ -176,6 +180,57 @@ export default () => {
 </glomex-dialog>
 ~~~
 
+### Allow drag'n'drop
+
+```js preact
+import { html, render, useRef } from 'docup'
+
+export default () => {
+  const select = useRef();
+  const dialog = useRef();
+  const onButtonClick = () => {
+    dialog.current.setAttribute('mode', select.current.value);
+  };
+
+  return html`
+  <p>
+  <select ref=${select}>
+    <option value="">hidden</option>
+    <option value="inline" selected>inline</option>
+    <option value="dock">dock</option>
+    <option value="lightbox">lightbox</option>
+  </select>
+  <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
+  </p>
+  <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="0px auto auto 0px">
+    <div slot="dialog-overlay"></div>
+    <div slot="dialog-element">
+      <div style="position: relative;">
+        <div class="placeholder-16x9"></div>
+        <video
+          class="video-element"
+          controls
+          playsinline
+          webkit-playsinline
+          preload="none"
+          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
+        </video>
+      </div>
+    </div>
+  </glomex-dialog>`
+}
+```
+
+~~~html
+<glomex-dialog mode="inline" dock-target-inset="50px 10px auto auto">
+  <!-- when this is defined it automatically makes the element draggable -->
+  <!-- allows to place custom elements in the dialog-overlay -->
+  <div slot="dialog-overlay"></div>
+  <!-- ... -->
+</glomex-dialog>
+~~~
+
 ### With IntersectionObserver and custom position
 
 This example auto docks the video element when the player gets scrolled out of view.
@@ -255,57 +310,6 @@ export default () => {
 ~~~html
 <!-- The intersection-observer-code is custom in the above example -->
 <glomex-dialog mode="inline" dock-target-inset="50px 10px auto auto">
-  <!-- ... -->
-</glomex-dialog>
-~~~
-
-### Allow drag'n'drop
-
-```js preact
-import { html, render, useRef } from 'docup'
-
-export default () => {
-  const select = useRef();
-  const dialog = useRef();
-  const onButtonClick = () => {
-    dialog.current.setAttribute('mode', select.current.value);
-  };
-
-  return html`
-  <p>
-  <select ref=${select}>
-    <option value="">hidden</option>
-    <option value="inline" selected>inline</option>
-    <option value="dock">dock</option>
-    <option value="lightbox">lightbox</option>
-  </select>
-  <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
-  </p>
-  <glomex-dialog ref=${dialog} mode="inline">
-    <div slot="dialog-overlay"></div>
-    <div slot="dialog-element">
-      <div style="position: relative;">
-        <div class="placeholder-16x9"></div>
-        <video
-          class="video-element"
-          controls
-          playsinline
-          webkit-playsinline
-          preload="none"
-          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-          poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
-        </video>
-      </div>
-    </div>
-  </glomex-dialog>`
-}
-```
-
-~~~html
-<glomex-dialog mode="inline" dock-target-inset="50px 10px auto auto">
-  <!-- when this is defined it automatically makes the element draggable -->
-  <!-- allows to place custom elements in the dialog-overlay -->
-  <div slot="dialog-overlay"></div>
   <!-- ... -->
 </glomex-dialog>
 ~~~

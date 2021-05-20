@@ -3,6 +3,8 @@
 A dialog web component that allows docking a video player or putting it in a lightbox.
 It allows implementing a similar feature as [amp-video-docking](https://amp.dev/documentation/examples/multimedia-animations/advanced_video_docking/) but without using AMP.
 
+This component only works in modern browsers that support [Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components) with [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/Web_Components#shadow_dom).
+
 For a formatted view of this document, please visit: http://unpkg.com/@glomex/glomex-dialog/index.html
 
 ## Testing

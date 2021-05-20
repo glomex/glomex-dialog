@@ -462,6 +462,9 @@ function getViewportIntersection(elem) {
   return rectIntersection(viewportRect, rect);
 }
 
-if (!window.customElements.get('glomex-dialog')) {
+if ('attachShadow' in window.document.createElement('div')
+  && window.customElements
+  && !window.customElements.get('glomex-dialog')
+) {
   window.customElements.define('glomex-dialog', GlomexDialogElement);
 }

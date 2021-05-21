@@ -298,7 +298,10 @@ export class GlomexDialogElement extends window.HTMLElement {
     };
 
     const mouseDown = (event) => {
+      disconnectListeners();
       if (this.getAttribute('mode') !== 'dock') return;
+      // prevent dragging when zoomed
+      if (window.visualViewport && window.visualViewport.scale !== 1) return;
       this._moving = true;
       // prevent scrolling
       window.document.body.style.height = '100%';
@@ -311,8 +314,6 @@ export class GlomexDialogElement extends window.HTMLElement {
       initialX = coords.x;
       initialY = coords.y;
       dockTargetRect = this.dockTarget.getBoundingClientRect();
-
-      disconnectListeners();
 
       // prevent document scrolling on iOS
       window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });

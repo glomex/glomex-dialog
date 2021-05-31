@@ -88,7 +88,7 @@ function pointerCoords(e) {
   };
 }
 
-export class GlomexDialogElement extends window.HTMLElement {
+class GlomexDialogElement extends window.HTMLElement {
   constructor() {
     super();
     const shadowRoot = this.attachShadow({ mode: 'open' });
@@ -159,11 +159,11 @@ export class GlomexDialogElement extends window.HTMLElement {
       fill: white;
       width: 100%;
       height: 100%;
-      cursor: move;
     }
 
     :host([mode=dock]) .dialog-content:hover .drag-handle {
       opacity: 1;
+      cursor: move;
     }
 
     :host([mode=dock]) .dialog-content ::slotted([slot=dialog-overlay]){
@@ -254,33 +254,21 @@ export class GlomexDialogElement extends window.HTMLElement {
     let dockTargetRect;
 
     const onMove = (event) => {
-      if (event.buttons != null && event.buttons !== 1) {
-        mouseUp();
-        return;
-      }
       const moveCoords = pointerCoords(event);
       const viewportRect = getViewportRect();
       const newTopValue = dockTargetRect.top + moveCoords.y - initialY;
       const newLeftValue = dockTargetRect.left + moveCoords.x - initialX;
       // Do not allow to drag dock-target out of viewport
-      if (newTopValue >= 0 && newTopValue + dockTargetRect.height <= viewportRect.height) {
-        this.dockTarget.style.top = `${newTopValue}px`;
-      } else if (newTopValue < 0) {
-        this.dockTarget.style.top = '0px';
-      } else if (newTopValue + dockTargetRect.height > viewportRect.height) {
-        this.dockTarget.style.top = `${viewportRect.height - dockTargetRect.height}px`;
-      }
-      if (newLeftValue >= 0 && newLeftValue + dockTargetRect.width <= viewportRect.width) {
-        this.dockTarget.style.left = `${newLeftValue}px`;
-      } else if (newLeftValue < 0) {
-        this.dockTarget.style.left = '0px';
-      } else if (newLeftValue + dockTargetRect.width > viewportRect.width) {
-        this.dockTarget.style.left = `${viewportRect.width - dockTargetRect.width}px`;
-      }
+      const clampLeft = Math.min(Math.max(newLeftValue, 0), viewportRect.width - dockTargetRect.width);
+      const clampTop = Math.min(Math.max(newTopValue, 0), viewportRect.height - dockTargetRect.height);
 
-      this.dockTarget.style.bottom = 'auto';
-      this.dockTarget.style.bottom = 'right';
-      this.refreshDockTarget();
+      window.requestAnimationFrame(() => {
+        this.dockTarget.style.left = `${(clampLeft /  viewportRect.width) * 100}%`;
+        this.dockTarget.style.top = `${(clampTop / viewportRect.height) * 100}%`;
+        this.dockTarget.style.bottom = 'auto';
+        this.dockTarget.style.right = 'auto';
+        this.refreshDockTarget();
+      });
     };
 
     const onNonPassiveTouchMove = (event) => {
@@ -317,17 +305,19 @@ export class GlomexDialogElement extends window.HTMLElement {
 
       // prevent document scrolling on iOS
       window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
-      document.body.addEventListener('mousemove', onMove);
-      document.body.addEventListener('touchmove', onMove);
-      document.body.addEventListener('mouseup', mouseUp);
-      document.body.addEventListener('touchend', mouseUp);
+      document.addEventListener('mousemove', onMove, false);
+      document.addEventListener('touchmove', onMove, false);
+      document.addEventListener('mouseup', mouseUp, false);
+      document.addEventListener('touchend', mouseUp, false);
+      document.addEventListener('touchcancel', mouseUp, false);
     };
 
     function disconnectListeners() {
-      document.body.removeEventListener('mousemove', onMove);
-      document.body.removeEventListener('touchmove', onMove);
-      document.body.removeEventListener('mouseup', mouseUp);
-      document.body.removeEventListener('touchend', mouseUp);
+      document.removeEventListener('mousemove', onMove, false);
+      document.removeEventListener('touchmove', onMove, false);
+      document.removeEventListener('mouseup', mouseUp, false);
+      document.removeEventListener('touchend', mouseUp, false);
+      document.removeEventListener('touchcancel', mouseUp, false);
       window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
     }
 

@@ -259,11 +259,17 @@ class GlomexDialogElement extends window.HTMLElement {
       const newTopValue = dockTargetRect.top + moveCoords.y - initialY;
       const newLeftValue = dockTargetRect.left + moveCoords.x - initialX;
       // Do not allow to drag dock-target out of viewport
-      const clampLeft = Math.min(Math.max(newLeftValue, 0), viewportRect.width - dockTargetRect.width);
-      const clampTop = Math.min(Math.max(newTopValue, 0), viewportRect.height - dockTargetRect.height);
+      const clampLeft = Math.min(
+        Math.max(newLeftValue, 0),
+        viewportRect.width - dockTargetRect.width,
+      );
+      const clampTop = Math.min(
+        Math.max(newTopValue, 0),
+        viewportRect.height - dockTargetRect.height,
+      );
 
       window.requestAnimationFrame(() => {
-        this.dockTarget.style.left = `${(clampLeft /  viewportRect.width) * 100}%`;
+        this.dockTarget.style.left = `${(clampLeft / viewportRect.width) * 100}%`;
         this.dockTarget.style.top = `${(clampTop / viewportRect.height) * 100}%`;
         this.dockTarget.style.bottom = 'auto';
         this.dockTarget.style.right = 'auto';

@@ -24,33 +24,35 @@ const updateAspectRatio = (element) => {
 const animateFromTo = (element, {
   from, to, animate = false, aspectRatio,
 } = {}) => {
-  const fromRect = from.getBoundingClientRect();
-  const toRect = to.getBoundingClientRect();
-  const visualViewport = getVisualViewport();
+  window.requestAnimationFrame(() => {
+    const fromRect = from.getBoundingClientRect();
+    const toRect = to.getBoundingClientRect();
+    const visualViewport = getVisualViewport();
 
-  const width = fromRect.width === 0 ? NON_VISIBLE_WIDTH : fromRect.width;
-  const height = width / aspectRatio;
+    const width = fromRect.width === 0 ? NON_VISIBLE_WIDTH : fromRect.width;
+    const height = width / aspectRatio;
 
-  element.style.position = 'fixed';
-  element.style.width = `${width}px`;
-  element.style.height = `${height}px`;
-  element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
-  element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
+    element.style.position = 'fixed';
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
+    element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
 
-  const deltaX = toRect.left - fromRect.left;
-  const deltaY = toRect.top - fromRect.top;
-  const deltaScale = toRect.width / width;
+    const deltaX = toRect.left - fromRect.left;
+    const deltaY = toRect.top - fromRect.top;
+    const deltaScale = toRect.width / width;
 
-  element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
-  element.style.transitionProperty = 'transform';
-  element.style.transformOrigin = 'top left';
-  if (animate) {
-    element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-    element.style.transitionTimingFunction = 'ease-out';
-  } else {
-    element.style.transitionDuration = null;
-    element.style.transitionTimingFunction = null;
-  }
+    element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
+    element.style.transitionProperty = 'transform';
+    element.style.transformOrigin = 'top left';
+    if (animate) {
+      element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+      element.style.transitionTimingFunction = 'ease-out';
+    } else {
+      element.style.transitionDuration = null;
+      element.style.transitionTimingFunction = null;
+    }
+  });
 };
 
 const toPositions = (insetString) => {

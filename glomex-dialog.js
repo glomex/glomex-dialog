@@ -26,6 +26,7 @@ const animateFromTo = (element, {
 } = {}) => {
   const fromRect = from.getBoundingClientRect();
   const toRect = to.getBoundingClientRect();
+  const visualViewport = getVisualViewport();
 
   const width = fromRect.width === 0 ? NON_VISIBLE_WIDTH : fromRect.width;
   const height = width / aspectRatio;
@@ -33,14 +34,14 @@ const animateFromTo = (element, {
   element.style.position = 'fixed';
   element.style.width = `${width}px`;
   element.style.height = `${height}px`;
-  element.style.top = `${fromRect.top}px`;
-  element.style.left = `${fromRect.left}px`;
+  element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
+  element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
 
   const deltaX = toRect.left - fromRect.left;
   const deltaY = toRect.top - fromRect.top;
   const deltaScale = toRect.width / width;
 
-  element.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaScale})`;
+  element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
   element.style.transitionProperty = 'transform';
   element.style.transformOrigin = 'top left';
   if (animate) {
@@ -260,18 +261,14 @@ class GlomexDialogElement extends window.HTMLElement {
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
     this._disconnectDragAndDrop = connectDragAndDrop(this);
 
-    let lastWidth = window.outerWidth;
     const onResize = () => {
-      const currentWidth = window.outerWidth;
-      if (lastWidth === currentWidth) return;
-      lastWidth = currentWidth;
       updateViewPortWidth(this);
       this.refreshDockTarget();
     };
     window.addEventListener('resize', onResize);
 
     this._disconnectResize = () => {
-      window.remvoeEventListener('resize', onResize);
+      window.removeEventListener('resize', onResize);
     };
   }
 
@@ -458,6 +455,14 @@ function getViewportRect() {
   };
 }
 
+function getVisualViewport() {
+  return window.visualViewport || {
+    offsetLeft: 0,
+    offsetTop: 0,
+    scale: 1,
+  };
+}
+
 function getViewportIntersection(elem) {
   const rect = elem.getBoundingClientRect();
   return rectIntersection(getViewportRect(), rect);
@@ -477,19 +482,20 @@ function connectDragAndDrop(element) {
     const viewportRect = getViewportRect();
     const newTopValue = dockTargetRect.top + moveCoords.y - initialY;
     const newLeftValue = dockTargetRect.left + moveCoords.x - initialX;
+    const visualVp = getVisualViewport();
     // Do not allow to drag dock-target out of viewport
     const clampLeft = Math.min(
       Math.max(newLeftValue, 0),
-      viewportRect.width - dockTargetRect.width,
+      (viewportRect.width - dockTargetRect.width + visualVp.offsetLeft) * visualVp.scale,
     );
     const clampTop = Math.min(
       Math.max(newTopValue, 0),
-      viewportRect.height - dockTargetRect.height,
+      (viewportRect.height - dockTargetRect.height + visualVp.offsetTop) * visualVp.scale,
     );
 
     window.requestAnimationFrame(() => {
-      element.dockTarget.style.left = `${(clampLeft / viewportRect.width) * 100}%`;
-      element.dockTarget.style.top = `${(clampTop / viewportRect.height) * 100}%`;
+      element.dockTarget.style.left = `${clampLeft}px`;
+      element.dockTarget.style.top = `${clampTop}px`;
       element.dockTarget.style.bottom = 'auto';
       element.dockTarget.style.right = 'auto';
       element.refreshDockTarget();
@@ -513,8 +519,6 @@ function connectDragAndDrop(element) {
   const mouseDown = (event) => {
     disconnectListeners();
     if (element.getAttribute('mode') !== 'dock') return;
-    // prevent dragging when zoomed
-    if (window.visualViewport && window.visualViewport.scale !== 1) return;
     element.isDragging = true;
     // prevent scrolling
     window.document.body.style.height = '100%';
@@ -524,8 +528,9 @@ function connectDragAndDrop(element) {
       event.preventDefault();
     }
     const coords = pointerCoords(event);
-    initialX = coords.x;
-    initialY = coords.y;
+    const visualViewport = getVisualViewport();
+    initialX = coords.x - visualViewport.offsetLeft;
+    initialY = coords.y - visualViewport.offsetTop;
     dockTargetRect = element.dockTarget.getBoundingClientRect();
 
     // prevent document scrolling on iOS

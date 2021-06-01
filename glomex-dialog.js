@@ -233,13 +233,13 @@ class GlomexDialogElement extends window.HTMLElement {
         </div>
       </slot>
     </div>`;
-    this._moving = false;
-    this._wasInInlineMode = false;
     const dockTarget = this.shadowRoot.querySelector('.dock-target');
     Object.assign(dockTarget.style, toPositions(DEFAULT_DOCK_TARGET_INSET));
 
+    this._wasInInlineMode = false;
+
     this.addEventListener('click', ({ target }) => {
-      if (this._moving) return;
+      if (this.isDragging) return;
       if (!(target instanceof GlomexDialogElement)) return;
       if (this._wasInInlineMode) {
         this.setAttribute('mode', 'inline');
@@ -247,92 +247,6 @@ class GlomexDialogElement extends window.HTMLElement {
         this.removeAttribute('mode');
       }
     });
-
-    const dialogOverlay = this.shadowRoot.querySelector('slot[name=dialog-overlay]');
-    let initialX;
-    let initialY;
-    let dockTargetRect;
-
-    const onMove = (event) => {
-      const moveCoords = pointerCoords(event);
-      const viewportRect = getViewportRect();
-      const newTopValue = dockTargetRect.top + moveCoords.y - initialY;
-      const newLeftValue = dockTargetRect.left + moveCoords.x - initialX;
-      // Do not allow to drag dock-target out of viewport
-      const clampLeft = Math.min(
-        Math.max(newLeftValue, 0),
-        viewportRect.width - dockTargetRect.width,
-      );
-      const clampTop = Math.min(
-        Math.max(newTopValue, 0),
-        viewportRect.height - dockTargetRect.height,
-      );
-
-      window.requestAnimationFrame(() => {
-        this.dockTarget.style.left = `${(clampLeft / viewportRect.width) * 100}%`;
-        this.dockTarget.style.top = `${(clampTop / viewportRect.height) * 100}%`;
-        this.dockTarget.style.bottom = 'auto';
-        this.dockTarget.style.right = 'auto';
-        this.refreshDockTarget();
-      });
-    };
-
-    const onNonPassiveTouchMove = (event) => {
-      event.preventDefault();
-    };
-
-    const mouseUp = () => {
-      disconnectListeners();
-      // reset scrolling
-      window.document.body.style.height = null;
-      window.document.body.style.overflow = null;
-      setTimeout(() => {
-        this._moving = false;
-      }, 1);
-    };
-
-    const mouseDown = (event) => {
-      disconnectListeners();
-      if (this.getAttribute('mode') !== 'dock') return;
-      // prevent dragging when zoomed
-      if (window.visualViewport && window.visualViewport.scale !== 1) return;
-      this._moving = true;
-      // prevent scrolling
-      window.document.body.style.height = '100%';
-      window.document.body.style.overflow = 'hidden';
-      // just because touchdown would complain
-      if (event.cancelable) {
-        event.preventDefault();
-      }
-      const coords = pointerCoords(event);
-      initialX = coords.x;
-      initialY = coords.y;
-      dockTargetRect = this.dockTarget.getBoundingClientRect();
-
-      // prevent document scrolling on iOS
-      window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
-      document.addEventListener('mousemove', onMove, false);
-      document.addEventListener('touchmove', onMove, false);
-      document.addEventListener('mouseup', mouseUp, false);
-      document.addEventListener('touchend', mouseUp, false);
-      document.addEventListener('touchcancel', mouseUp, false);
-    };
-
-    function disconnectListeners() {
-      document.removeEventListener('mousemove', onMove, false);
-      document.removeEventListener('touchmove', onMove, false);
-      document.removeEventListener('mouseup', mouseUp, false);
-      document.removeEventListener('touchend', mouseUp, false);
-      document.removeEventListener('touchcancel', mouseUp, false);
-      window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
-    }
-
-    if (this.dockTarget === dockTarget) {
-      // get hover working on iOS
-      document.documentElement.addEventListener('touchstart', () => {});
-      dialogOverlay.addEventListener('mousedown', mouseDown);
-      dialogOverlay.addEventListener('touchstart', mouseDown);
-    }
   }
 
   connectedCallback() {
@@ -343,10 +257,27 @@ class GlomexDialogElement extends window.HTMLElement {
       this.shadowRoot.querySelector('.dialog-content').style.display = 'none';
     }
 
-    window.addEventListener('resize', () => {
+    if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
+    this._disconnectDragAndDrop = connectDragAndDrop(this);
+
+    let lastWidth = window.outerWidth;
+    const onResize = () => {
+      const currentWidth = window.outerWidth;
+      if (lastWidth === currentWidth) return;
+      lastWidth = currentWidth;
       updateViewPortWidth(this);
       this.refreshDockTarget();
-    });
+    };
+    window.addEventListener('resize', onResize);
+
+    this._disconnectResize = () => {
+      window.remvoeEventListener('resize', onResize);
+    };
+  }
+
+  disconnectedCallback() {
+    if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
+    this._disconnectResize();
   }
 
   static get observedAttributes() {
@@ -420,6 +351,8 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     if (name === 'dock-target') {
+      if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
+      this._disconnectDragAndDrop = connectDragAndDrop(this);
       this.refreshDockTarget();
     }
 
@@ -528,6 +461,104 @@ function getViewportRect() {
 function getViewportIntersection(elem) {
   const rect = elem.getBoundingClientRect();
   return rectIntersection(getViewportRect(), rect);
+}
+
+function connectDragAndDrop(element) {
+  let initialX;
+  let initialY;
+  let dockTargetRect;
+
+  const dockTarget = element.shadowRoot.querySelector('.dock-target');
+  const dragHandle = element.shadowRoot.querySelector('slot[name=dialog-overlay]');
+  if (dockTarget !== element.dockTarget) return () => {};
+
+  const onMove = (event) => {
+    const moveCoords = pointerCoords(event);
+    const viewportRect = getViewportRect();
+    const newTopValue = dockTargetRect.top + moveCoords.y - initialY;
+    const newLeftValue = dockTargetRect.left + moveCoords.x - initialX;
+    // Do not allow to drag dock-target out of viewport
+    const clampLeft = Math.min(
+      Math.max(newLeftValue, 0),
+      viewportRect.width - dockTargetRect.width,
+    );
+    const clampTop = Math.min(
+      Math.max(newTopValue, 0),
+      viewportRect.height - dockTargetRect.height,
+    );
+
+    window.requestAnimationFrame(() => {
+      element.dockTarget.style.left = `${(clampLeft / viewportRect.width) * 100}%`;
+      element.dockTarget.style.top = `${(clampTop / viewportRect.height) * 100}%`;
+      element.dockTarget.style.bottom = 'auto';
+      element.dockTarget.style.right = 'auto';
+      element.refreshDockTarget();
+    });
+  };
+
+  const onNonPassiveTouchMove = (event) => {
+    event.preventDefault();
+  };
+
+  const mouseUp = () => {
+    disconnectListeners();
+    // reset scrolling
+    window.document.body.style.height = null;
+    window.document.body.style.overflow = null;
+    setTimeout(() => {
+      element.isDragging = false;
+    }, 1);
+  };
+
+  const mouseDown = (event) => {
+    disconnectListeners();
+    if (element.getAttribute('mode') !== 'dock') return;
+    // prevent dragging when zoomed
+    if (window.visualViewport && window.visualViewport.scale !== 1) return;
+    element.isDragging = true;
+    // prevent scrolling
+    window.document.body.style.height = '100%';
+    window.document.body.style.overflow = 'hidden';
+    // just because touchdown would complain
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    const coords = pointerCoords(event);
+    initialX = coords.x;
+    initialY = coords.y;
+    dockTargetRect = element.dockTarget.getBoundingClientRect();
+
+    // prevent document scrolling on iOS
+    window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
+    document.addEventListener('mousemove', onMove, false);
+    document.addEventListener('touchmove', onMove, false);
+    document.addEventListener('mouseup', mouseUp, false);
+    document.addEventListener('touchend', mouseUp, false);
+    document.addEventListener('touchcancel', mouseUp, false);
+  };
+
+  function disconnectListeners() {
+    window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
+    document.removeEventListener('mousemove', onMove, false);
+    document.removeEventListener('touchmove', onMove, false);
+    document.removeEventListener('mouseup', mouseUp, false);
+    document.removeEventListener('touchend', mouseUp, false);
+    document.removeEventListener('touchcancel', mouseUp, false);
+  }
+
+  function fixIosHover() {}
+
+  // get hover working on iOS
+  document.documentElement.addEventListener('touchstart', fixIosHover, false);
+  dragHandle.addEventListener('mousedown', mouseDown, false);
+  dragHandle.addEventListener('touchstart', mouseDown, false);
+
+  return () => {
+    mouseUp();
+    document.documentElement.removeEventListener('touchstart', fixIosHover, false);
+    dragHandle.removeEventListener('mousedown', mouseDown, false);
+    dragHandle.removeEventListener('touchstart', mouseDown, false);
+  };
 }
 
 if ('attachShadow' in window.document.createElement('div')

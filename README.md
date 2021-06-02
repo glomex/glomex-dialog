@@ -22,10 +22,10 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
 -->
 <glomex-dialog mode="inline">
   <!--
-    "dialog-overlay" is optional:
+    "dock-overlay" is optional:
     enables drag'n'drop feature when defined
   -->
-  <div slot="dialog-overlay"></div>
+  <div slot="dock-overlay"></div>
   <div slot="dialog-element">
     <!-- Your HTML that should be docked / put into lightbox -->
   </div>
@@ -182,7 +182,7 @@ export default () => {
 </glomex-dialog>
 ~~~
 
-### Allow drag'n'drop
+### Provide own dock overlay
 
 ```js preact
 import { html, render, useRef } from 'docup'
@@ -190,12 +190,59 @@ import { html, render, useRef } from 'docup'
 export default () => {
   const select = useRef();
   const dialog = useRef();
+  const video = useRef();
   const onButtonClick = () => {
     dialog.current.setAttribute('mode', select.current.value);
   };
 
+  const onPlayButtonClick = (event) => {
+    video.current.play();
+    event.preventDefault();
+  };
+
+  const onPauseButtonClick = (event) => {
+    video.current.pause();
+    event.preventDefault();
+  }
+
   return html`
   <p>
+  <style>
+    glomex-dialog .custom-overlay {
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      cursor: move;
+    }
+    glomex-dialog[mode=dock] .custom-overlay:hover {
+      display: block;
+      opacity: 1;
+    }
+
+    glomex-dialog .custom-overlay:hover {
+      background-color: rgba(200, 200, 200, 0.7);
+    }
+    glomex-dialog .controls {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      height: 100%;
+    }
+    glomex-dialog .play-button, glomex-dialog .pause-button {
+      color: black;
+      font-size: 5em;
+      cursor: pointer;
+    }
+
+    glomex-dialog .play-button:hover, glomex-dialog .pause-button:hover {
+      color: white;
+      font-size: 5em;
+      cursor: pointer;
+    }
+  </style>
   <select ref=${select}>
     <option value="">hidden</option>
     <option value="inline" selected>inline</option>
@@ -205,11 +252,17 @@ export default () => {
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
   <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="0px auto auto 0px">
-    <div slot="dialog-overlay"></div>
+    <div slot="dock-overlay" class="custom-overlay">
+      <div class="controls">
+        <button class="play-button" onClick=${onPlayButtonClick}>▶</button>
+        <button class="pause-button" onClick=${onPauseButtonClick}>■</button>
+      </div>
+    </div>
     <div slot="dialog-element">
       <div style="position: relative;">
         <div class="placeholder-16x9"></div>
         <video
+          ref=${video}
           class="video-element"
           controls
           playsinline
@@ -225,10 +278,25 @@ export default () => {
 ```
 
 ~~~html
+<style>
+  glomex-dialog .custom-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    cursor: move;
+  }
+  glomex-dialog .custom-overlay:hover {
+    background-color: rgba(200, 200, 200, 0.7);
+  }
+</style>
 <glomex-dialog mode="inline" dock-target-inset="50px 10px auto auto">
   <!-- when this is defined it automatically makes the element draggable -->
-  <!-- allows to place custom elements in the dialog-overlay -->
-  <div slot="dialog-overlay"></div>
+  <!-- allows to place custom elements in the dock-overlay -->
+  <div slot="dock-overlay" class="custom-overlay">
+    <!-- place custom controls here -->
+  </div>
   <!-- ... -->
 </glomex-dialog>
 ~~~

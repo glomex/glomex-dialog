@@ -52,6 +52,15 @@ const animateFromTo = (element, {
       element.style.transitionDuration = null;
       element.style.transitionTimingFunction = null;
     }
+    element.dispatchEvent(
+      new CustomEvent('dockchange', {
+        detail: {
+          scale: deltaScale
+        },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   });
 };
 

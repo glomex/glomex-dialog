@@ -413,7 +413,8 @@ export default () => {
 
 | Event          | Type                          |
 |----------------|-------------------------------|
-| `toggledialog` | `CustomEvent<{ mode: any; }>` |
+| `toggledialog` | `CustomEvent<{ mode: string; }>` |
+| `dockchange`   | `CustomEvent<{ scale: number; }>` |
 
 ## License
 

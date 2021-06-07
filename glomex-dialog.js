@@ -164,12 +164,6 @@ class GlomexDialogElement extends window.HTMLElement {
       background-size: 10%;
     }
 
-    :host([mode=inline]) .placeholder,
-    :host([mode=lightbox]) .placeholder,
-    :host([mode=dock]) .placeholder {
-      display: block;
-    }
-
     .dialog-content {
       display: block;
       position: absolute;
@@ -338,6 +332,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
+    const placeholder = this.shadowRoot.querySelector('.placeholder');
     if (name === 'mode') {
       if (newValue === 'dock') {
         this.parentElement.removeAttribute('modal');
@@ -345,7 +340,7 @@ class GlomexDialogElement extends window.HTMLElement {
         dialogContent.style.display = 'block';
         updateDockTargetState(this);
         animateFromTo(dialogContent, {
-          from: this.shadowRoot.querySelector('.placeholder'),
+          from: placeholder,
           to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
           animate: this._wasInInlineMode,
           aspectRatio: getAspectRatioFromStrings([
@@ -355,6 +350,7 @@ class GlomexDialogElement extends window.HTMLElement {
         });
       } else if (newValue === 'inline') {
         this._wasInInlineMode = true;
+        placeholder.style.display = 'block';
         dialogContent.style.position = 'absolute';
         dialogContent.style.transform = null;
         dialogContent.style.top = null;
@@ -380,6 +376,7 @@ class GlomexDialogElement extends window.HTMLElement {
         dialogContent.focus();
       } else {
         this._wasInInlineMode = false;
+        placeholder.style.display = 'none';
         dialogContent.setAttribute('style', '');
         dialogContent.style.display = 'none';
       }

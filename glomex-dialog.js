@@ -33,11 +33,9 @@ const getAlternativeDockTarget = (element) => {
     }
   }
   return null;
-}
+};
 
-const getDefaultDockTarget = (element) => {
-  return element.shadowRoot.querySelector('.dock-target');
-}
+const getDefaultDockTarget = (element) => element.shadowRoot.querySelector('.dock-target');
 
 const updateDockTargetState = (element) => {
   const alternativeDockTarget = getAlternativeDockTarget(element);
@@ -46,18 +44,16 @@ const updateDockTargetState = (element) => {
   } else {
     element.removeAttribute('alternative-dock-target');
   }
-}
+};
 
 const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
   aspectRatioStrings.push('16:9');
   return aspectRatioStrings.map((aspectRatio) => {
-    if (!aspectRatio) return;
+    if (!aspectRatio) return NaN;
     const ratioSplit = aspectRatio.split(':');
     return ratioSplit[0] / ratioSplit[1];
-  }).filter((aspectRatio) => {
-    return !!aspectRatio;
-  })[0];
-}
+  }).filter((aspectRatio) => !!aspectRatio)[0];
+};
 
 const animateFromTo = (element, {
   from, to, animate = false, aspectRatio,
@@ -93,7 +89,7 @@ const animateFromTo = (element, {
     element.dispatchEvent(
       new CustomEvent('dockchange', {
         detail: {
-          scale: deltaScale
+          scale: deltaScale,
         },
         bubbles: true,
         composed: true,
@@ -306,11 +302,11 @@ class GlomexDialogElement extends window.HTMLElement {
   connectedCallback() {
     updateViewPortWidth(this);
     updatePlaceholderAspectRatio(this, getAspectRatioFromStrings([
-      this.getAttribute('aspect-ratio')
+      this.getAttribute('aspect-ratio'),
     ]));
     updateDockAspectRatio(this, getAspectRatioFromStrings([
       this.getAttribute('dock-aspect-ratio'),
-      this.getAttribute('aspect-ratio')
+      this.getAttribute('aspect-ratio'),
     ]));
 
     if (!this.hasAttribute('mode')) {
@@ -354,7 +350,7 @@ class GlomexDialogElement extends window.HTMLElement {
           animate: this._wasInInlineMode,
           aspectRatio: getAspectRatioFromStrings([
             this.getAttribute('dock-aspect-ratio'),
-            this.getAttribute('aspect-ratio')
+            this.getAttribute('aspect-ratio'),
           ]),
         });
       } else if (newValue === 'inline') {
@@ -421,14 +417,14 @@ class GlomexDialogElement extends window.HTMLElement {
 
     if (name === 'aspect-ratio') {
       updatePlaceholderAspectRatio(this, getAspectRatioFromStrings([
-        this.getAttribute('aspect-ratio')
+        this.getAttribute('aspect-ratio'),
       ]));
     }
 
     if (name === 'dock-aspect-ratio') {
       updateDockAspectRatio(this, getAspectRatioFromStrings([
         this.getAttribute('dock-aspect-ratio'),
-        this.getAttribute('aspect-ratio')
+        this.getAttribute('aspect-ratio'),
       ]));
     }
   }
@@ -443,7 +439,7 @@ class GlomexDialogElement extends window.HTMLElement {
         animate: false,
         aspectRatio: getAspectRatioFromStrings([
           this.getAttribute('dock-aspect-ratio'),
-          this.getAttribute('aspect-ratio')
+          this.getAttribute('aspect-ratio'),
         ]),
       });
     }
@@ -520,7 +516,7 @@ function connectDragAndDrop(element) {
   let initialY;
   let dockTargetRect;
   const dragHandle = element.shadowRoot.querySelector('slot[name=dock-overlay]');
-  const dockTarget = element.shadowRoot.querySelector('.dock-target')
+  const dockTarget = element.shadowRoot.querySelector('.dock-target');
 
   const onMove = (event) => {
     const moveCoords = pointerCoords(event);

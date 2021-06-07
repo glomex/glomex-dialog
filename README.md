@@ -301,6 +301,87 @@ export default () => {
 </glomex-dialog>
 ~~~
 
+### Custom dialog layout
+
+```js preact
+import { html, render, useRef } from 'docup'
+
+export default () => {
+  const select = useRef();
+  const dialog = useRef();
+  const onButtonClick = () => {
+    dialog.current.setAttribute('mode', select.current.value);
+  };
+
+  return html`
+  <style>
+    glomex-dialog .title {
+      display: none;
+      color: white;
+      background: red;
+      padding: 0.2em 0.5em;
+    }
+
+    glomex-dialog[mode=dock] .title,
+    glomex-dialog[mode=lightbox] .title {
+      display: block;
+      font-size: 1.5em;
+    }
+
+    glomex-dialog[mode=dock] .backdrop,
+    glomex-dialog[mode=lightbox] .backdrop {
+      border: 10px solid red;
+      background: red;
+    }
+  </style>
+  <p>
+  <select ref=${select}>
+    <option value="">hidden</option>
+    <option value="inline" selected>inline</option>
+    <option value="dock">dock</option>
+    <option value="lightbox">lightbox</option>
+  </select>
+  <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
+  </p>
+  <glomex-dialog ref=${dialog} mode="inline" dock-aspect-ratio="16:11" dock-target-inset="auto 0px 0px auto">
+  <div slot="dialog-element">
+    <div class="backdrop">
+    <div class="title">Super Duper Title</div>
+    <div style="position: relative;">
+      <div class="placeholder-16x9"></div>
+      <video
+        class="video-element"
+        controls
+        playsinline
+        webkit-playsinline
+        preload="none"
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
+      </video>
+    </div>
+    </div>
+  </div>
+  </glomex-dialog>`
+}
+```
+
+~~~html
+<style>
+  glomex-dialog[mode=dock] .backdrop,
+  glomex-dialog[mode=lightbox] .backdrop {
+    background: red;
+    border: 10px solid red;
+  }
+</style>
+<!-- You can set a different aspect ratio for the dock mode -->
+<glomex-dialog mode="inline" dock-aspect-ratio="16:10" dock-target-inset="50px 10px auto auto">
+  <div class="backdrop">
+    <div class="title">Some Title</div>
+    <!-- ... --->
+  </div>
+</glomex-dialog>
+~~~
+
 ### With IntersectionObserver and custom position
 
 This example auto docks the video element when the player gets scrolled out of view.
@@ -388,26 +469,19 @@ export default () => {
 
 ### Attributes
 
-| Attribute           | Values |
-|---------------------|--------|
-| `aspect-ratio`      | `16:9` (default) |
-| `dock-target`       | `#anotherElement` |
-| `dock-target-inset` | `0px 10px auto auto` |
-| `mode`              | `inline`, `dock`, `lightbox` |
-
-### Properties
-
-| Property      | Modifiers | Type              |
-|---------------|-----------|-------------------|
-| `aspectRatio` | readonly  | `number`          |
-| `dockTarget`  | readonly  | `Element \| null` |
-| `placeholder` | readonly  | `Element \| null` |
+| Attribute           |
+|---------------------|
+| `aspect-ratio`      |
+| `dock-aspect-ratio` |
+| `dock-target`       |
+| `dock-target-inset` |
+| `mode`              |
 
 ### Methods
 
 | Method              | Type       |
 |---------------------|------------|
-| `refreshDockTarget` | `(): void` |
+| `refreshDockDialog` | `(): void` |
 
 ### Events
 

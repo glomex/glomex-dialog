@@ -16,20 +16,9 @@
         },
         {
           "name": "dock-target-inset"
-        }
-      ],
-      "properties": [
-        {
-          "name": "aspectRatio",
-          "type": "number"
         },
         {
-          "name": "placeholder",
-          "type": "Element | null"
-        },
-        {
-          "name": "dockTarget",
-          "type": "Element | null"
+          "name": "dock-aspect-ratio"
         }
       ],
       "events": [

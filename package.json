@@ -8,6 +8,7 @@
   "scripts": {
     "lint": "eslint glomex-dialog.js",
     "start": "serve",
+    "create-custom-element-json": "npx web-component-analyzer glomex-dialog.js --outFile custom-element.json",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "cp README.md index.html.md"
   },

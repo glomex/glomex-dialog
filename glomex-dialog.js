@@ -12,14 +12,52 @@ const updateViewPortWidth = (element) => {
   element.shadowRoot.querySelector('.dock-target').style.width = `${viewPortWidth}px`;
 };
 
-const updateAspectRatio = (element) => {
-  const paddingTop = `${(1 / (element.aspectRatio)) * 100}%`;
-  Array.prototype.slice.call(
-    element.shadowRoot.querySelectorAll('.aspect-ratio-box'),
-  ).forEach((box) => {
-    box.style.paddingTop = paddingTop;
-  });
+const updatePlaceholderAspectRatio = (element, aspectRatio) => {
+  element.shadowRoot.querySelector('.placeholder.aspect-ratio-box')
+    .style.paddingTop = `${(1 / aspectRatio) * 100}%`;
 };
+
+const updateDockAspectRatio = (element, aspectRatio) => {
+  element.shadowRoot.querySelector('.dock-target .aspect-ratio-box')
+    .style.paddingTop = `${(1 / aspectRatio) * 100}%`;
+};
+
+const getAlternativeDockTarget = (element) => {
+  const dockTarget = element.getAttribute('dock-target');
+  let dockTargetElement;
+  if (dockTarget) {
+    dockTargetElement = document.querySelector(dockTarget);
+    const intersection = getViewportIntersection(dockTargetElement);
+    if (intersection && intersection.width > 0 && intersection.height > 0) {
+      return dockTargetElement;
+    }
+  }
+  return null;
+}
+
+const getDefaultDockTarget = (element) => {
+  return element.shadowRoot.querySelector('.dock-target');
+}
+
+const updateDockTargetState = (element) => {
+  const alternativeDockTarget = getAlternativeDockTarget(element);
+  if (alternativeDockTarget && !element.getAttribute('alternative-dock-target')) {
+    element.setAttribute('alternative-dock-target', '');
+  } else {
+    element.removeAttribute('alternative-dock-target');
+  }
+}
+
+const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
+  aspectRatioStrings.push('16:9');
+  return aspectRatioStrings.map((aspectRatio) => {
+    if (!aspectRatio) return;
+    const ratioSplit = aspectRatio.split(':');
+    return ratioSplit[0] / ratioSplit[1];
+  }).filter((aspectRatio) => {
+    return !!aspectRatio;
+  })[0];
+}
 
 const animateFromTo = (element, {
   from, to, animate = false, aspectRatio,
@@ -130,6 +168,12 @@ class GlomexDialogElement extends window.HTMLElement {
       background-size: 10%;
     }
 
+    :host([mode=inline]) .placeholder,
+    :host([mode=lightbox]) .placeholder,
+    :host([mode=dock]) .placeholder {
+      display: block;
+    }
+
     .dialog-content {
       display: block;
       position: absolute;
@@ -143,19 +187,23 @@ class GlomexDialogElement extends window.HTMLElement {
       position: absolute;
       top: 0;
       left: 0;
-      width: 1.75em;
-      height: 1.75em;
+      width: 2em;
+      height: 2em;
       padding: 0.5em;
       fill-color: white;
       margin: .5em;
       border-radius: 2px;
-      background-color: rgba(0, 0, 0, 0.4);
+      background-color: rgba(0, 0, 0, 0.7);
       transition: background 300ms ease-in-out, opacity 300ms ease-in-out;
       opacity: 0;
     }
 
+    :host([alternative-dock-target]) .drag-handle {
+      display: none;
+    }
+
     .drag-handle:hover {
-      background-color: rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.4);
     }
 
     .drag-handle:active .drag-handle-overlay {
@@ -257,7 +305,13 @@ class GlomexDialogElement extends window.HTMLElement {
 
   connectedCallback() {
     updateViewPortWidth(this);
-    updateAspectRatio(this);
+    updatePlaceholderAspectRatio(this, getAspectRatioFromStrings([
+      this.getAttribute('aspect-ratio')
+    ]));
+    updateDockAspectRatio(this, getAspectRatioFromStrings([
+      this.getAttribute('dock-aspect-ratio'),
+      this.getAttribute('aspect-ratio')
+    ]));
 
     if (!this.hasAttribute('mode')) {
       this.shadowRoot.querySelector('.dialog-content').style.display = 'none';
@@ -268,7 +322,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
     const onResize = () => {
       updateViewPortWidth(this);
-      this.refreshDockTarget();
+      this.refreshDockDialog();
     };
     window.addEventListener('resize', onResize);
 
@@ -283,7 +337,7 @@ class GlomexDialogElement extends window.HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['mode', 'aspect-ratio', 'dock-target', 'dock-target-inset'];
+    return ['mode', 'aspect-ratio', 'dock-target', 'dock-target-inset', 'dock-aspect-ratio'];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -292,20 +346,24 @@ class GlomexDialogElement extends window.HTMLElement {
       if (newValue === 'dock') {
         this.parentElement.removeAttribute('modal');
         dialogContent.style.zIndex = DOCK_Z_INDEX;
+        dialogContent.style.display = 'block';
+        updateDockTargetState(this);
         animateFromTo(dialogContent, {
-          from: this.placeholder,
-          to: this.dockTarget,
+          from: this.shadowRoot.querySelector('.placeholder'),
+          to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
           animate: this._wasInInlineMode,
-          aspectRatio: this.aspectRatio,
+          aspectRatio: getAspectRatioFromStrings([
+            this.getAttribute('dock-aspect-ratio'),
+            this.getAttribute('aspect-ratio')
+          ]),
         });
       } else if (newValue === 'inline') {
         this._wasInInlineMode = true;
-        this.placeholder.style.display = 'block';
-
         dialogContent.style.position = 'absolute';
         dialogContent.style.transform = null;
         dialogContent.style.top = null;
         dialogContent.style.left = null;
+        dialogContent.style.display = 'block';
         if (this._wasInInlineMode && oldValue === 'dock') {
           dialogContent.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
           dialogContent.style.transitionTimingFunction = 'ease-out';
@@ -320,14 +378,14 @@ class GlomexDialogElement extends window.HTMLElement {
         window.document.body.style.height = '100%';
         window.document.body.style.overflow = 'hidden';
         dialogContent.setAttribute('style', '');
+        dialogContent.style.display = 'block';
         // TODO: rethink focus-handling?
         dialogContent.setAttribute('tabindex', '-1');
         dialogContent.focus();
-      } else if (!newValue) {
+      } else {
         this._wasInInlineMode = false;
-        this.placeholder.style.display = 'none';
-
         dialogContent.setAttribute('style', '');
+        dialogContent.style.display = 'none';
       }
 
       if (newValue !== 'lightbox') {
@@ -336,11 +394,6 @@ class GlomexDialogElement extends window.HTMLElement {
         window.document.body.style.overflow = null;
       }
 
-      if (!newValue) {
-        dialogContent.style.display = 'none';
-      } else {
-        dialogContent.style.display = 'block';
-      }
       this.dispatchEvent(
         new CustomEvent('toggledialog', {
           detail: {
@@ -355,7 +408,7 @@ class GlomexDialogElement extends window.HTMLElement {
     if (name === 'dock-target') {
       if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
       this._disconnectDragAndDrop = connectDragAndDrop(this);
-      this.refreshDockTarget();
+      this.refreshDockDialog();
     }
 
     if (name === 'dock-target-inset') {
@@ -363,50 +416,37 @@ class GlomexDialogElement extends window.HTMLElement {
         this.shadowRoot.querySelector('.dock-target').style,
         toPositions(newValue) || toPositions(DEFAULT_DOCK_TARGET_INSET),
       );
-      this.refreshDockTarget();
+      this.refreshDockDialog();
     }
 
-    if (name === 'aspectRatio') {
-      updateAspectRatio(this);
+    if (name === 'aspect-ratio') {
+      updatePlaceholderAspectRatio(this, getAspectRatioFromStrings([
+        this.getAttribute('aspect-ratio')
+      ]));
+    }
+
+    if (name === 'dock-aspect-ratio') {
+      updateDockAspectRatio(this, getAspectRatioFromStrings([
+        this.getAttribute('dock-aspect-ratio'),
+        this.getAttribute('aspect-ratio')
+      ]));
     }
   }
 
-  refreshDockTarget() {
+  refreshDockDialog() {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     if (this.getAttribute('mode') === 'dock') {
+      updateDockTargetState(this);
       animateFromTo(dialogContent, {
-        from: this.placeholder,
-        to: this.dockTarget,
+        from: this.shadowRoot.querySelector('.placeholder'),
+        to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
         animate: false,
-        aspectRatio: this.aspectRatio,
+        aspectRatio: getAspectRatioFromStrings([
+          this.getAttribute('dock-aspect-ratio'),
+          this.getAttribute('aspect-ratio')
+        ]),
       });
     }
-  }
-
-  get aspectRatio() {
-    const aspectRatioString = this.getAttribute('aspect-ratio');
-    if (!aspectRatioString) return 16 / 9;
-    const ratioSplit = aspectRatioString.split(':');
-    return ratioSplit[0] / ratioSplit[1];
-  }
-
-  get placeholder() {
-    return this.shadowRoot.querySelector('.placeholder');
-  }
-
-  get dockTarget() {
-    const dockTarget = this.getAttribute('dock-target');
-    let dockTargetElement;
-    if (dockTarget) {
-      dockTargetElement = document.querySelector(dockTarget);
-      const intersection = getViewportIntersection(dockTargetElement);
-      if (intersection && intersection.width > 0 && intersection.height > 0) {
-        this.shadowRoot.querySelector('.drag-handle').style.display = 'none';
-        return dockTargetElement;
-      }
-    }
-    this.shadowRoot.querySelector('.drag-handle').style.display = null;
-    return this.shadowRoot.querySelector('.dock-target');
   }
 }
 
@@ -480,6 +520,7 @@ function connectDragAndDrop(element) {
   let initialY;
   let dockTargetRect;
   const dragHandle = element.shadowRoot.querySelector('slot[name=dock-overlay]');
+  const dockTarget = element.shadowRoot.querySelector('.dock-target')
 
   const onMove = (event) => {
     const moveCoords = pointerCoords(event);
@@ -498,11 +539,11 @@ function connectDragAndDrop(element) {
     );
 
     window.requestAnimationFrame(() => {
-      element.dockTarget.style.left = `${clampLeft}px`;
-      element.dockTarget.style.top = `${clampTop}px`;
-      element.dockTarget.style.bottom = 'auto';
-      element.dockTarget.style.right = 'auto';
-      element.refreshDockTarget();
+      dockTarget.style.left = `${clampLeft}px`;
+      dockTarget.style.top = `${clampTop}px`;
+      dockTarget.style.bottom = 'auto';
+      dockTarget.style.right = 'auto';
+      element.refreshDockDialog();
     });
   };
 
@@ -535,7 +576,7 @@ function connectDragAndDrop(element) {
     const visualViewport = getVisualViewport();
     initialX = coords.x - visualViewport.offsetLeft;
     initialY = coords.y - visualViewport.offsetTop;
-    dockTargetRect = element.dockTarget.getBoundingClientRect();
+    dockTargetRect = dockTarget.getBoundingClientRect();
 
     // prevent document scrolling on iOS
     window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });

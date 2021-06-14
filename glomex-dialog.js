@@ -155,13 +155,18 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     .placeholder {
-      display: none;
+      display: block;
       background-color: rgba(200, 200, 200, 0.8);
       cursor: pointer;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' width='24px' version='1.1' viewBox='0 0 24 24'%3E%3Cg fill='none' fill-rule='evenodd' stroke='none' stroke-width='1'%3E%3Cg transform='scale(1, 1)'%3E%3Cpath d='M19,19 L5,19 L5,5 L12,5 L13,3 L5,3 L3,3 3,3.9 3,5 L3,19 L3,20.1 3,21 5,21 L19,21 L21,21 21,20.1 21,19 L21,12 L19,12 L19,19 Z M14,3 L14,5 L17.59,5 L7.76,14.83 L9.17,16.24 L19,6.41 L19,10 L21,10 L21,3 L14,3 Z' fill='%23fff' fill-rule='nonzero'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: center;
       background-size: 10%;
+    }
+
+    :host([mode=hidden]) .dialog-content,
+    :host([mode=hidden]) .placeholder {
+      display: none;
     }
 
     .dialog-content {
@@ -280,15 +285,15 @@ class GlomexDialogElement extends window.HTMLElement {
     const dockTarget = this.shadowRoot.querySelector('.dock-target');
     Object.assign(dockTarget.style, toPositions(DEFAULT_DOCK_TARGET_INSET));
 
-    this._wasInInlineMode = false;
+    this._wasInHiddenMode = false;
 
     this.addEventListener('click', ({ target }) => {
       if (this.isDragging) return;
       if (!(target instanceof GlomexDialogElement)) return;
-      if (this._wasInInlineMode) {
-        this.setAttribute('mode', 'inline');
+      if (this._wasInHiddenMode) {
+        this.setAttribute('mode', 'hidden');
       } else {
-        this.removeAttribute('mode');
+        this.setAttribute('mode', 'inline');
       }
     });
   }
@@ -304,7 +309,8 @@ class GlomexDialogElement extends window.HTMLElement {
     ]));
 
     if (!this.hasAttribute('mode')) {
-      this.shadowRoot.querySelector('.dialog-content').style.display = 'none';
+      // default-mode is "inline"
+      this.setAttribute('mode', 'inline');
     }
 
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
@@ -334,29 +340,31 @@ class GlomexDialogElement extends window.HTMLElement {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     const placeholder = this.shadowRoot.querySelector('.placeholder');
     if (name === 'mode') {
+      if (this._wasInHiddenMode && (newValue === 'lightbox' || newValue === 'dock')) {
+        placeholder.style.display = 'none';
+      } else {
+        placeholder.style.display = null
+      }
+
       if (newValue === 'dock') {
         this.parentElement.removeAttribute('modal');
         dialogContent.style.zIndex = DOCK_Z_INDEX;
-        dialogContent.style.display = 'block';
         updateDockTargetState(this);
         animateFromTo(dialogContent, {
           from: placeholder,
           to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
-          animate: this._wasInInlineMode,
+          animate: !this._wasInHiddenMode,
           aspectRatio: getAspectRatioFromStrings([
             this.getAttribute('dock-aspect-ratio'),
             this.getAttribute('aspect-ratio'),
           ]),
         });
       } else if (newValue === 'inline') {
-        this._wasInInlineMode = true;
-        placeholder.style.display = 'block';
         dialogContent.style.position = 'absolute';
         dialogContent.style.transform = null;
         dialogContent.style.top = null;
         dialogContent.style.left = null;
-        dialogContent.style.display = 'block';
-        if (this._wasInInlineMode && oldValue === 'dock') {
+        if (!this._wasInHiddenMode && oldValue === 'dock') {
           dialogContent.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
           dialogContent.style.transitionTimingFunction = 'ease-out';
         }
@@ -365,20 +373,21 @@ class GlomexDialogElement extends window.HTMLElement {
             dialogContent.setAttribute('style', '');
           }
         }, DEFAULT_TRANSITION_DURATION);
+        this._wasInHiddenMode = false;
       } else if (newValue === 'lightbox') {
         // prevent scrolling
         window.document.body.style.height = '100%';
         window.document.body.style.overflow = 'hidden';
         dialogContent.setAttribute('style', '');
-        dialogContent.style.display = 'block';
         // TODO: rethink focus-handling?
         dialogContent.setAttribute('tabindex', '-1');
         dialogContent.focus();
+      } else if (newValue === 'hidden') {
+        this._wasInHiddenMode = true;
       } else {
-        this._wasInInlineMode = false;
-        placeholder.style.display = 'none';
-        dialogContent.setAttribute('style', '');
-        dialogContent.style.display = 'none';
+        // default mode is "inline"
+        this.setAttribute('mode', 'inline');
+        return;
       }
 
       if (newValue !== 'lightbox') {
@@ -388,7 +397,7 @@ class GlomexDialogElement extends window.HTMLElement {
       }
 
       this.dispatchEvent(
-        new CustomEvent('toggledialog', {
+        new CustomEvent('modechange', {
           detail: {
             mode: newValue,
           },

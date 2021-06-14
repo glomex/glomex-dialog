@@ -23,7 +23,7 @@
       ],
       "events": [
         {
-          "name": "toggledialog"
+          "name": "modechange"
         },
         {
           "name": "dockchange"

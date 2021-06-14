@@ -18,7 +18,7 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
   import 'http://unpkg.com/@glomex/glomex-dialog';
 </script>
 <!--
-  mode: "" | "inline" | "dock" | "lightbox"
+  mode: "hidden" | "inline" | "dock" | "lightbox"
 -->
 <glomex-dialog mode="inline">
   <!--
@@ -49,7 +49,7 @@ export default () => {
   return html`
   <p>
   <select ref=${select}>
-    <option value="">hidden</option>
+    <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
@@ -102,7 +102,7 @@ export default () => {
   return html`
   <p>
   <select ref=${select}>
-    <option value="">hidden</option>
+    <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
@@ -149,14 +149,14 @@ export default () => {
   return html`
   <p>
   <select ref=${select}>
-    <option value="" selected>hidden</option>
+    <option value="hidden" selected>hidden</option>
     <option value="inline">inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
-  <glomex-dialog ref=${dialog}>
+  <glomex-dialog mode="hidden" ref=${dialog}>
   <div slot="dialog-element">
     <div style="position: relative;">
       <div class="placeholder-16x9"></div>
@@ -177,7 +177,7 @@ export default () => {
 
 ~~~html
 <!-- without a defined mode attribute -->
-<glomex-dialog>
+<glomex-dialog mode="hidden">
   <!-- ... -->
 </glomex-dialog>
 ~~~
@@ -244,7 +244,7 @@ export default () => {
     }
   </style>
   <select ref=${select}>
-    <option value="">hidden</option>
+    <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
@@ -336,7 +336,7 @@ export default () => {
   </style>
   <p>
   <select ref=${select}>
-    <option value="">hidden</option>
+    <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
@@ -421,7 +421,7 @@ export default () => {
     });
     if (dialog.current) {
       observer.observe(dialog.current);
-      dialog.current.addEventListener('toggledialog', (evt) => {
+      dialog.current.addEventListener('modechange', (evt) => {
         if (evt.detail.mode === 'inline' && currentIntersectionRatio !== 1) {
           onceVisible = false;
         }
@@ -432,7 +432,7 @@ export default () => {
   return html`
   <p>
   <select ref=${select}>
-    <option value="" selected>hidden</option>
+    <option value="hidden" selected>hidden</option>
     <option value="inline">inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
@@ -487,7 +487,7 @@ export default () => {
 
 | Event          | Type                          |
 |----------------|-------------------------------|
-| `toggledialog` | `CustomEvent<{ mode: string; }>` |
+| `modechange` | `CustomEvent<{ mode: string; }>` |
 | `dockchange`   | `CustomEvent<{ scale: number; }>` |
 
 ## License

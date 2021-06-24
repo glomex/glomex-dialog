@@ -147,6 +147,7 @@ class GlomexDialogElement extends window.HTMLElement {
     .dock-target {
       position: fixed;
       pointer-events: none;
+      visibility: hidden;
     }
 
     .aspect-ratio-box {

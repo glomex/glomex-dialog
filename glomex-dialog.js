@@ -170,6 +170,10 @@ class GlomexDialogElement extends window.HTMLElement {
       display: none;
     }
 
+    :host([mode=inline]) .placeholder {
+      visibility: hidden;
+    }
+
     .dialog-content {
       display: block;
       position: absolute;

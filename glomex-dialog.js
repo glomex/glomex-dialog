@@ -56,7 +56,7 @@ const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
 };
 
 const animateFromTo = (element, {
-  from, to, animate = false, aspectRatio,
+  from, to, animate = false, aspectRatio, downscale = false,
 } = {}) => {
   window.requestAnimationFrame(() => {
     const fromRect = from.getBoundingClientRect();
@@ -79,6 +79,11 @@ const animateFromTo = (element, {
     element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
     element.style.transitionProperty = 'transform';
     element.style.transformOrigin = 'top left';
+    if (!downscale) {
+      element.firstElementChild.style.width = `${toRect.width}px`;
+      element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
+      element.firstElementChild.style.transformOrigin = 'top left';
+    }
     if (animate) {
       element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
       element.style.transitionTimingFunction = 'ease-out';
@@ -170,10 +175,6 @@ class GlomexDialogElement extends window.HTMLElement {
       display: none;
     }
 
-    :host([mode=inline]) .placeholder {
-      visibility: hidden;
-    }
-
     .dialog-content {
       display: block;
       position: absolute;
@@ -187,11 +188,10 @@ class GlomexDialogElement extends window.HTMLElement {
       position: absolute;
       top: 0;
       left: 0;
-      width: 2em;
-      height: 2em;
-      padding: 0.5em;
+      width: 1em;
+      height: 1em;
+      padding: 0.25em;
       fill-color: white;
-      margin: .5em;
       border-radius: 2px;
       background-color: rgba(0, 0, 0, 0.7);
       transition: background 300ms ease-in-out, opacity 300ms ease-in-out;
@@ -279,13 +279,15 @@ class GlomexDialogElement extends window.HTMLElement {
       <div class="aspect-ratio-box"></div>
     </div>
     <div class="dialog-content">
-      <slot name="dialog-element"></slot>
-      <slot name="dock-overlay">
-        <div class="drag-handle">
-          <div class="drag-handle-overlay"></div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/></svg>
-        </div>
-      </slot>
+      <div class="dialog-inverse-scale-element">
+        <slot name="dialog-element"></slot>
+        <slot name="dock-overlay">
+          <div class="drag-handle">
+            <div class="drag-handle-overlay"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/></svg>
+          </div>
+        </slot>
+      </div>
     </div>`;
     const dockTarget = this.shadowRoot.querySelector('.dock-target');
     Object.assign(dockTarget.style, toPositions(DEFAULT_DOCK_TARGET_INSET));
@@ -348,7 +350,7 @@ class GlomexDialogElement extends window.HTMLElement {
       if (this._wasInHiddenMode && (newValue === 'lightbox' || newValue === 'dock')) {
         placeholder.style.display = 'none';
       } else {
-        placeholder.style.display = null
+        placeholder.style.display = null;
       }
 
       if (newValue === 'dock') {
@@ -363,10 +365,13 @@ class GlomexDialogElement extends window.HTMLElement {
             this.getAttribute('dock-aspect-ratio'),
             this.getAttribute('aspect-ratio'),
           ]),
+          downscale: this.getAttribute('dock-downscale') || false,
         });
       } else if (newValue === 'inline') {
         dialogContent.style.position = 'absolute';
         dialogContent.style.transform = null;
+        dialogContent.firstElementChild.style.transform = null;
+        dialogContent.firstElementChild.style.width = null;
         dialogContent.style.top = null;
         dialogContent.style.left = null;
         if (!this._wasInHiddenMode && oldValue === 'dock') {
@@ -384,6 +389,7 @@ class GlomexDialogElement extends window.HTMLElement {
         window.document.body.style.height = '100%';
         window.document.body.style.overflow = 'hidden';
         dialogContent.setAttribute('style', '');
+        dialogContent.firstElementChild.setAttribute('style', '');
         // TODO: rethink focus-handling?
         dialogContent.setAttribute('tabindex', '-1');
         dialogContent.focus();
@@ -452,6 +458,7 @@ class GlomexDialogElement extends window.HTMLElement {
           this.getAttribute('dock-aspect-ratio'),
           this.getAttribute('aspect-ratio'),
         ]),
+        downscale: this.getAttribute('dock-downscale') || false,
       });
     }
   }

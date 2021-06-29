@@ -75,6 +75,53 @@ export default () => {
 }
 ```
 
+### Downscale the dock mode
+
+```js preact
+import { html, render, useRef } from 'docup'
+
+export default () => {
+  const select = useRef();
+  const dialog = useRef();
+  const onButtonClick = () => {
+    dialog.current.setAttribute('mode', select.current.value);
+  };
+
+  return html`
+  <p>
+  <select ref=${select}>
+    <option value="hidden">hidden</option>
+    <option value="inline" selected>inline</option>
+    <option value="dock">dock</option>
+    <option value="lightbox">lightbox</option>
+  </select>
+  <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
+  </p>
+  <glomex-dialog ref=${dialog} mode="inline" dock-downscale>
+  <div slot="dialog-element">
+    <div style="position: relative;">
+      <div class="placeholder-16x9"></div>
+      <video
+        class="video-element"
+        controls
+        playsinline
+        webkit-playsinline
+        preload="none"
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
+      </video>
+    </div>
+  </div>
+  </glomex-dialog>`
+}
+```
+
+~~~html
+<glomex-dialog mode="inline" dock-downscale>
+  <!-- ... -->
+</glomex-dialog>
+~~~
+
 ### Alternative dock target
 
 Can render into an alternative dock target when this dock target is visible during dock transition.
@@ -233,13 +280,13 @@ export default () => {
     }
     glomex-dialog .play-button, glomex-dialog .pause-button {
       color: black;
-      font-size: 5em;
+      font-size: 2em;
       cursor: pointer;
     }
 
     glomex-dialog .play-button:hover, glomex-dialog .pause-button:hover {
       color: white;
-      font-size: 5em;
+      font-size: 2em;
       cursor: pointer;
     }
   </style>
@@ -319,13 +366,13 @@ export default () => {
       display: none;
       color: white;
       background: red;
-      padding: 0.2em 0.5em;
+      whitespace: no-wrap;
     }
 
     glomex-dialog[mode=dock] .title,
     glomex-dialog[mode=lightbox] .title {
       display: block;
-      font-size: 1.5em;
+      font-size: 1em;
     }
 
     glomex-dialog[mode=dock] .backdrop,

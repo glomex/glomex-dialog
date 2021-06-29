@@ -1,32 +1,71 @@
 {
-  "version": "experimental",
-  "tags": [
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
     {
-      "name": "glomex-dialog",
-      "path": "./glomex-dialog.js",
-      "attributes": [
+      "kind": "javascript-module",
+      "path": "glomex-dialog.js",
+      "declarations": [
         {
-          "name": "mode"
-        },
-        {
-          "name": "aspect-ratio"
-        },
-        {
-          "name": "dock-target"
-        },
-        {
-          "name": "dock-target-inset"
-        },
-        {
-          "name": "dock-aspect-ratio"
+          "kind": "class",
+          "description": "A dialog web component that allows docking a video player or\nputting it in a lightbox. It allows implementing a similar\nfeature as amp-video-docking but without using AMP.",
+          "name": "GlomexDialogElement",
+          "members": [
+            {
+              "kind": "method",
+              "name": "refreshDockDialog",
+              "description": "Forces repositioning docked dialog element.\nShould be called when an external \"dock-target\" changed\nits size or position."
+            }
+          ],
+          "events": [
+            {
+              "name": "dockscale",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "name": "modechange",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "mode"
+            },
+            {
+              "name": "aspect-ratio"
+            },
+            {
+              "name": "dock-target"
+            },
+            {
+              "name": "dock-target-inset"
+            },
+            {
+              "name": "dock-aspect-ratio"
+            },
+            {
+              "name": "dock-downscale"
+            }
+          ],
+          "superclass": {
+            "module": "glomex-dialog.js"
+          },
+          "tagName": "glomex-dialog",
+          "customElement": true
         }
       ],
-      "events": [
+      "exports": [
         {
-          "name": "modechange"
-        },
-        {
-          "name": "dockchange"
+          "kind": "custom-element-definition",
+          "name": "glomex-dialog",
+          "declaration": {
+            "name": "GlomexDialogElement",
+            "module": "glomex-dialog.js"
+          }
         }
       ]
     }

@@ -57,7 +57,7 @@ const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
 
 const animateFromTo = (element, {
   from, to, animate = false, aspectRatio, downscale = false,
-} = {}) => {
+} = {}) => new Promise((resolve) => {
   window.requestAnimationFrame(() => {
     const fromRect = from.getBoundingClientRect();
     const toRect = to.getBoundingClientRect();
@@ -91,17 +91,11 @@ const animateFromTo = (element, {
       element.style.transitionDuration = null;
       element.style.transitionTimingFunction = null;
     }
-    element.dispatchEvent(
-      new CustomEvent('dockchange', {
-        detail: {
-          scale: deltaScale,
-        },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    resolve({
+      scale: downscale ? deltaScale : 1,
+    });
   });
-};
+});
 
 const toPositions = (insetString) => {
   const insetParts = insetString.split(' ');
@@ -139,6 +133,11 @@ function pointerCoords(e) {
   };
 }
 
+/**
+ * A dialog web component that allows docking a video player or
+ * putting it in a lightbox. It allows implementing a similar
+ * feature as amp-video-docking but without using AMP.
+ */
 class GlomexDialogElement extends window.HTMLElement {
   constructor() {
     super();
@@ -340,7 +339,14 @@ class GlomexDialogElement extends window.HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['mode', 'aspect-ratio', 'dock-target', 'dock-target-inset', 'dock-aspect-ratio'];
+    return [
+      'mode',
+      'aspect-ratio',
+      'dock-target',
+      'dock-target-inset',
+      'dock-aspect-ratio',
+      'dock-downscale',
+    ];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -365,7 +371,17 @@ class GlomexDialogElement extends window.HTMLElement {
             this.getAttribute('dock-aspect-ratio'),
             this.getAttribute('aspect-ratio'),
           ]),
-          downscale: this.getAttribute('dock-downscale') || false,
+          downscale: this.getAttribute('dock-downscale'),
+        }).then(({ scale }) => {
+          if (this.getAttribute('dock-downscale')) {
+            this.dispatchEvent(
+              new CustomEvent('dockscale', {
+                detail: { scale },
+                bubbles: true,
+                composed: true,
+              }),
+            );
+          }
         });
       } else if (newValue === 'inline') {
         dialogContent.style.position = 'absolute';
@@ -444,8 +460,20 @@ class GlomexDialogElement extends window.HTMLElement {
         this.getAttribute('aspect-ratio'),
       ]));
     }
+    if (name === 'dock-downscale' && newValue) {
+      if (newValue) {
+        dialogContent.firstElementChild.setAttribute('style', '');
+      } else {
+        // No implementation when dock-downscale gets reset
+      }
+    }
   }
 
+  /**
+   * Forces repositioning docked dialog element.
+   * Should be called when an external "dock-target" changed
+   * its size or position.
+   */
   refreshDockDialog() {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     if (this.getAttribute('mode') === 'dock') {
@@ -458,7 +486,17 @@ class GlomexDialogElement extends window.HTMLElement {
           this.getAttribute('dock-aspect-ratio'),
           this.getAttribute('aspect-ratio'),
         ]),
-        downscale: this.getAttribute('dock-downscale') || false,
+        downscale: this.getAttribute('dock-downscale'),
+      }).then(({ scale }) => {
+        if (this.getAttribute('dock-downscale')) {
+          this.dispatchEvent(
+            new CustomEvent('dockscale', {
+              detail: { scale },
+              bubbles: true,
+              composed: true,
+            }),
+          );
+        }
       });
     }
   }

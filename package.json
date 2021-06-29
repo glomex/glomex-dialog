@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint glomex-dialog.js",
     "start": "serve",
-    "create-custom-element-json": "npx web-component-analyzer glomex-dialog.js --outFile custom-element.json",
+    "create-custom-element-json": "npx @custom-elements-manifest/analyzer analyze --globs glomex-dialog.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "cp README.md index.html.md"
   },
@@ -33,5 +33,6 @@
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.2",
     "serve": "^11.3.2"
-  }
+  },
+  "customElements": "custom-elements.json"
 }

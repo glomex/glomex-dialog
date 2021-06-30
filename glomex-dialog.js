@@ -161,12 +161,26 @@ class GlomexDialogElement extends window.HTMLElement {
 
     .placeholder {
       display: block;
-      background-color: rgba(200, 200, 200, 0.8);
       cursor: pointer;
+    }
+
+    .placeholder-inner {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+    }
+
+    .placeholder-default {
+      background-color: var(--placeholder-background-color, rgba(200, 200, 200, 0.8));
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' width='24px' version='1.1' viewBox='0 0 24 24'%3E%3Cg fill='none' fill-rule='evenodd' stroke='none' stroke-width='1'%3E%3Cg transform='scale(1, 1)'%3E%3Cpath d='M19,19 L5,19 L5,5 L12,5 L13,3 L5,3 L3,3 3,3.9 3,5 L3,19 L3,20.1 3,21 5,21 L19,21 L21,21 21,20.1 21,19 L21,12 L19,12 L19,19 Z M14,3 L14,5 L17.59,5 L7.76,14.83 L9.17,16.24 L19,6.41 L19,10 L21,10 L21,3 L14,3 Z' fill='%23fff' fill-rule='nonzero'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: center;
       background-size: 10%;
+      width: 100%;
+      height: 100%;
     }
 
     :host([mode=hidden]) .dialog-content,
@@ -273,7 +287,11 @@ class GlomexDialogElement extends window.HTMLElement {
       }
     }
     </style>
-    <div class="placeholder aspect-ratio-box"></div>
+    <div class="placeholder aspect-ratio-box">
+      <slot name="placeholder" class="placeholder-inner">
+        <div class="placeholder-default"></div>
+      </slot>
+    </div>
     <div class="dock-target">
       <div class="aspect-ratio-box"></div>
     </div>
@@ -295,7 +313,8 @@ class GlomexDialogElement extends window.HTMLElement {
 
     this.addEventListener('click', ({ target }) => {
       if (this.isDragging) return;
-      if (!(target instanceof GlomexDialogElement)) return;
+      // allows clicks within GlomexDialog and on a slotted placeholder
+      if (!(target instanceof GlomexDialogElement) && !target.assignedSlot) return;
       if (this._wasInHiddenMode) {
         this.setAttribute('mode', 'hidden');
       } else {

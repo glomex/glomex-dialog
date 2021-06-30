@@ -17,6 +17,11 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
 <script type="module">
   import 'http://unpkg.com/@glomex/glomex-dialog';
 </script>
+<style>
+  glomex-dialog {
+    --placeholder-background-color: red;
+  }
+</style>
 <!--
   mode: "hidden" | "inline" | "dock" | "lightbox"
 -->
@@ -26,6 +31,7 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
     enables drag'n'drop feature when defined
   -->
   <div slot="dock-overlay"></div>
+  <div slot="placeholder"></div>
   <div slot="dialog-element">
     <!-- Your HTML that should be docked / put into lightbox -->
   </div>
@@ -35,6 +41,8 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
 ## Examples
 
 ### Inline mode
+
+With custom background color.
 
 ```js preact
 import { html, render, useRef } from 'docup'
@@ -47,6 +55,11 @@ export default () => {
   };
 
   return html`
+  <style>
+    glomex-dialog#inlineDialog {
+      --placeholder-background-color: red;
+    }
+  </style>
   <p>
   <select ref=${select}>
     <option value="hidden">hidden</option>
@@ -56,7 +69,7 @@ export default () => {
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
-  <glomex-dialog ref=${dialog} mode="inline">
+  <glomex-dialog id="inlineDialog" ref=${dialog} mode="inline">
   <div slot="dialog-element">
     <div style="position: relative;">
       <div class="placeholder-16x9"></div>
@@ -74,6 +87,17 @@ export default () => {
   </glomex-dialog>`
 }
 ```
+
+~~~html
+<style>
+  glomex-dialog {
+    --placeholder-background-color: red;
+  }
+</style>
+<glomex-dialog mode="inline">
+  <!-- ... -->
+</glomex-dialog>
+~~~
 
 ### Downscale the dock mode
 
@@ -226,6 +250,68 @@ export default () => {
 <!-- without a defined mode attribute -->
 <glomex-dialog mode="hidden">
   <!-- ... -->
+</glomex-dialog>
+~~~
+
+### With custom placeholder
+
+```js preact
+import { html, render, useRef } from 'docup'
+
+export default () => {
+  const select = useRef();
+  const dialog = useRef();
+  const onButtonClick = () => {
+    dialog.current.setAttribute('mode', select.current.value);
+  };
+
+  return html`
+  <style>
+    #myPlaceholder:defined {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: green;
+    }
+  </style>
+  <p>
+  <select ref=${select}>
+    <option value="hidden">hidden</option>
+    <option value="inline" selected>inline</option>
+    <option value="dock">dock</option>
+    <option value="lightbox">lightbox</option>
+  </select>
+  <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
+  </p>
+  <glomex-dialog id="inlineDialog" ref=${dialog} mode="inline">
+  <div slot="placeholder" id="myPlaceholder"></div>
+  <div slot="dialog-element">
+    <div class="placeholder-16x9"></div>
+    <video
+      class="video-element"
+      controls
+      playsinline
+      webkit-playsinline
+      preload="none"
+      src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
+    </video>
+  </div>
+  </glomex-dialog>`
+}
+```
+
+~~~html
+<style>
+  #myPlaceholder:defined {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: green;
+  }
+</style>
+<glomex-dialog mode="inline">
+  <div id="myPlaceholder" slot="placeholder"></div>
 </glomex-dialog>
 ~~~
 

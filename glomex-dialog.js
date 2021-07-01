@@ -239,11 +239,11 @@ class GlomexDialogElement extends window.HTMLElement {
       cursor: move;
     }
 
-    .dialog-content ::slotted([slot=dock-overlay]){
+    .dialog-content ::slotted([slot=dock-overlay]) {
       display: none;
     }
 
-    :host([mode=dock]) .dialog-content ::slotted([slot=dock-overlay]){
+    :host([mode=dock]) .dialog-content ::slotted([slot=dock-overlay]) {
       display: block;
     }
 
@@ -592,6 +592,15 @@ function connectDragAndDrop(element) {
   let dockTargetRect;
   const dragHandle = element.shadowRoot.querySelector('slot[name=dock-overlay]');
   const dockTarget = element.shadowRoot.querySelector('.dock-target');
+  // overlay for the whole page so that events don't bubble into other iframes
+  const pageOverlay = document.createElement('div');
+  pageOverlay.style.display = 'block';
+  pageOverlay.style.position = 'fixed';
+  pageOverlay.style.top = 0;
+  pageOverlay.style.right = 0;
+  pageOverlay.style.bottom = 0;
+  pageOverlay.style.left = 0;
+  pageOverlay.style.zIndex = DOCK_Z_INDEX - 1;
 
   const onMove = (event) => {
     const moveCoords = pointerCoords(event);
@@ -627,6 +636,7 @@ function connectDragAndDrop(element) {
     // reset scrolling
     window.document.body.style.height = null;
     window.document.body.style.overflow = null;
+    document.body.removeChild(pageOverlay);
     setTimeout(() => {
       element.isDragging = false;
     }, 1);
@@ -639,6 +649,10 @@ function connectDragAndDrop(element) {
     // prevent scrolling
     window.document.body.style.height = '100%';
     window.document.body.style.overflow = 'hidden';
+    // place an overlay above the whole document to
+    // prevent events bubbling into iframes on that page during drag
+    document.body.appendChild(pageOverlay);
+
     // just because touchdown would complain
     if (event.cancelable && event.type === 'mousedown') {
       event.preventDefault();

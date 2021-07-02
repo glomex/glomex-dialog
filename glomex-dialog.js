@@ -195,6 +195,11 @@ class GlomexDialogElement extends window.HTMLElement {
       right: 0;
       bottom: 0;
       left: 0;
+      will-change: transform, width, height, top, left;
+    }
+
+    .dialog-inverse-scale-element {
+      will-change: transform, width, height, top, left;
     }
 
     .drag-handle {
@@ -633,10 +638,13 @@ function connectDragAndDrop(element) {
 
   const mouseUp = () => {
     disconnectListeners();
+    element.style.pointerEvents = null;
     // reset scrolling
     window.document.body.style.height = null;
     window.document.body.style.overflow = null;
-    document.body.removeChild(pageOverlay);
+    if (pageOverlay.parentNode === document.body) {
+      document.body.removeChild(pageOverlay);
+    }
     setTimeout(() => {
       element.isDragging = false;
     }, 1);
@@ -646,6 +654,9 @@ function connectDragAndDrop(element) {
     disconnectListeners();
     if (element.getAttribute('mode') !== 'dock') return;
     element.isDragging = true;
+    // prevent mousemove events to be swallowed when glomex-dialog
+    // has an iframe as child
+    element.style.pointerEvents = 'none';
     // prevent scrolling
     window.document.body.style.height = '100%';
     window.document.body.style.overflow = 'hidden';

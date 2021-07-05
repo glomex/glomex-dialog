@@ -77,8 +77,9 @@ const animateFromTo = (element, {
     const deltaScale = toRect.width / width;
 
     element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
-    element.style.transitionProperty = 'transform';
+    element.style.transitionProperty = 'transform, opacity';
     element.style.transformOrigin = 'top left';
+    element.style.transitionTimingFunction = 'ease-out';
     if (!downscale) {
       element.firstElementChild.style.width = `${toRect.width}px`;
       element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
@@ -86,10 +87,11 @@ const animateFromTo = (element, {
     }
     if (animate) {
       element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-      element.style.transitionTimingFunction = 'ease-out';
     } else {
       element.style.transitionDuration = null;
-      element.style.transitionTimingFunction = null;
+      setTimeout(() => {
+        element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+      }, 0);
     }
     resolve({
       scale: downscale ? deltaScale : 1,
@@ -296,7 +298,7 @@ class GlomexDialogElement extends window.HTMLElement {
     <div class="dock-target">
       <div class="aspect-ratio-box"></div>
     </div>
-    <div class="dialog-content">
+    <div class="dialog-content" part="dialog-content">
       <div class="dialog-inverse-scale-element">
         <slot name="dialog-element"></slot>
         <slot name="dock-overlay">
@@ -312,7 +314,7 @@ class GlomexDialogElement extends window.HTMLElement {
     this._wasInHiddenMode = false;
 
     this.addEventListener('click', ({ target }) => {
-      if (this.isDragging) return;
+      if (this.classList.contains('dragging')) return;
       // allows clicks within GlomexDialog and on a slotted placeholder
       if (!(target instanceof GlomexDialogElement) && !target.assignedSlot) return;
       if (this._wasInHiddenMode) {
@@ -642,14 +644,14 @@ function connectDragAndDrop(element) {
       document.body.removeChild(pageOverlay);
     }
     setTimeout(() => {
-      element.isDragging = false;
+      element.classList.remove('dragging');
     }, 1);
   };
 
   const mouseDown = (event) => {
     disconnectListeners();
     if (element.getAttribute('mode') !== 'dock') return;
-    element.isDragging = true;
+    element.classList.add('dragging');
     // prevent mousemove events to be swallowed when glomex-dialog
     // has an iframe as child
     dialogElement.style.pointerEvents = 'none';

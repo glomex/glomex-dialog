@@ -592,6 +592,7 @@ function connectDragAndDrop(element) {
   let dockTargetRect;
   const dragHandle = element.shadowRoot.querySelector('slot[name=dock-overlay]');
   const dockTarget = element.shadowRoot.querySelector('.dock-target');
+  const dialogElement = element.shadowRoot.querySelector('slot[name=dialog-element]');
   // overlay for the whole page so that events don't bubble into other iframes
   const pageOverlay = document.createElement('div');
   pageOverlay.style.display = 'block';
@@ -633,7 +634,7 @@ function connectDragAndDrop(element) {
 
   const mouseUp = () => {
     disconnectListeners();
-    element.style.pointerEvents = null;
+    dialogElement.style.pointerEvents = null;
     // reset scrolling
     window.document.body.style.height = null;
     window.document.body.style.overflow = null;
@@ -651,7 +652,7 @@ function connectDragAndDrop(element) {
     element.isDragging = true;
     // prevent mousemove events to be swallowed when glomex-dialog
     // has an iframe as child
-    element.style.pointerEvents = 'none';
+    dialogElement.style.pointerEvents = 'none';
     // prevent scrolling
     window.document.body.style.height = '100%';
     window.document.body.style.overflow = 'hidden';
@@ -689,22 +690,16 @@ function connectDragAndDrop(element) {
 
   function fixIosHover() {}
 
-  function onClick(e) {
-    e.preventDefault();
-  }
-
   // get hover working on iOS
   document.documentElement.addEventListener('touchstart', fixIosHover, false);
   dragHandle.addEventListener('mousedown', mouseDown, false);
   dragHandle.addEventListener('touchstart', mouseDown, false);
-  dragHandle.addEventListener('click', onClick, false);
 
   return () => {
     mouseUp();
     document.documentElement.removeEventListener('touchstart', fixIosHover, false);
     dragHandle.removeEventListener('mousedown', mouseDown, false);
     dragHandle.removeEventListener('touchstart', mouseDown, false);
-    dragHandle.removeEventListener('click', onClick, false);
   };
 }
 

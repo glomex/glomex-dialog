@@ -197,11 +197,11 @@ class GlomexDialogElement extends window.HTMLElement {
       right: 0;
       bottom: 0;
       left: 0;
-      will-change: transform, width, height, top, left;
+      will-change: transform, transition, width, height, top, left, opacity;
     }
 
     .dialog-inverse-scale-element {
-      will-change: transform, width, height, top, left;
+      will-change: transform, transition, width, height, top, left, opacity;
     }
 
     .drag-handle {
@@ -216,6 +216,10 @@ class GlomexDialogElement extends window.HTMLElement {
       background-color: rgba(0, 0, 0, 0.7);
       transition: background 300ms ease-in-out, opacity 300ms ease-in-out;
       opacity: 0;
+    }
+
+    :host([mode=dock]) .dialog-content {
+      contain: strict;
     }
 
     :host([alternative-dock-target]) .drag-handle {

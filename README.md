@@ -24,6 +24,7 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
 </style>
 <!--
   mode: "hidden" | "inline" | "dock" | "lightbox"
+  | "custom-value" (which behaves like inline)
 -->
 <glomex-dialog mode="inline">
   <!--
@@ -66,6 +67,7 @@ export default () => {
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
     <option value="lightbox">lightbox</option>
+    <option value="custom-value">custom-value</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>

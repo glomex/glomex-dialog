@@ -437,15 +437,14 @@ class GlomexDialogElement extends window.HTMLElement {
       } else if (newValue === 'hidden') {
         this._wasInHiddenMode = true;
       } else {
-        // default mode is "inline"
-        this.setAttribute('mode', 'inline');
-        return;
+        this._wasInHiddenMode = false;
       }
 
       if (newValue !== 'lightbox') {
         // reset prevent scrolling
         window.document.body.style.height = null;
         window.document.body.style.overflow = null;
+        dialogContent.removeAttribute('tabindex');
       }
 
       this.dispatchEvent(

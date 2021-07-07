@@ -84,6 +84,10 @@ const animateFromTo = (element, {
       element.firstElementChild.style.width = `${toRect.width}px`;
       element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
       element.firstElementChild.style.transformOrigin = 'top left';
+      // we need an arbitrary transition to avoid animation glitches in Chrome
+      element.firstElementChild.style.transitionProperty = 'transform';
+      element.firstElementChild.style.transitionTimingFunction = 'ease-out';
+      element.firstElementChild.style.transitionDuration = '0.05ms';
     }
     if (animate) {
       element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;

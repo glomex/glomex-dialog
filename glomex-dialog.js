@@ -254,6 +254,10 @@ class GlomexDialogElement extends window.HTMLElement {
       display: none;
     }
 
+    .dialog-content slot[name="dock-overlay"] {
+      touch-action: none;
+    }
+
     :host([mode=dock]) .dialog-content ::slotted([slot=dock-overlay]) {
       display: block;
     }

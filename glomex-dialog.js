@@ -87,7 +87,7 @@ const animateFromTo = (element, {
       // we need an arbitrary transition to avoid animation glitches in Chrome
       element.firstElementChild.style.transitionProperty = 'transform';
       element.firstElementChild.style.transitionTimingFunction = 'ease-out';
-      element.firstElementChild.style.transitionDuration = '0.05ms';
+      element.firstElementChild.style.transitionDuration = '1ms';
     }
     if (animate) {
       element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;

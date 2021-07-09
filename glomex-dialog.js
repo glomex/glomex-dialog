@@ -208,6 +208,15 @@ class GlomexDialogElement extends window.HTMLElement {
       will-change: transform, transition, width, height, top, left, opacity;
     }
 
+    /*
+       fixes an issue with fullscreen in safari,
+       "will-change: transform" lets external elements shine through
+    */
+    .dialog-content:-webkit-full-screen-ancestor:not(iframe),
+    .dialog-inverse-scale-element:-webkit-full-screen-ancestor:not(iframe) {
+      will-change: auto;
+    }
+
     .drag-handle {
       position: absolute;
       top: 0;

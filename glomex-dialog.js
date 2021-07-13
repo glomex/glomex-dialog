@@ -81,13 +81,12 @@ const animateFromTo = (element, {
     element.style.transformOrigin = 'top left';
     element.style.transitionTimingFunction = 'ease-out';
     if (!downscale) {
-      element.firstElementChild.style.width = `${toRect.width}px`;
-      element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
-      element.firstElementChild.style.transformOrigin = 'top left';
-      // we need an arbitrary transition to avoid animation glitches in Chrome
-      element.firstElementChild.style.transitionProperty = 'transform';
-      element.firstElementChild.style.transitionTimingFunction = 'ease-out';
-      element.firstElementChild.style.transitionDuration = '1ms';
+      // during animation is running we wait a little before scaling up
+      // to avoid the effect that the dialog gets first scaled up
+      setTimeout(() => {
+        element.firstElementChild.style.width = `${toRect.width}px`;
+        element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
+      }, animate ? DEFAULT_TRANSITION_DURATION / 2 : 0);
     }
     if (animate) {
       element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
@@ -206,6 +205,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
     .dialog-inverse-scale-element {
       will-change: transform, transition, width, height, top, left, opacity;
+      transform-origin: top left;
     }
 
     /*

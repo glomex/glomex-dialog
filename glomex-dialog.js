@@ -6,8 +6,8 @@ const LIGHTBOX_Z_INDEX = 10000000;
 
 const updateViewPortWidth = (element) => {
   let viewPortWidth = window.innerWidth * 0.3;
-  if (viewPortWidth < 180) {
-    viewPortWidth = 180;
+  if (viewPortWidth < 192) {
+    viewPortWidth = 192;
   }
   element.shadowRoot.querySelector('.dock-target').style.width = `${viewPortWidth}px`;
 };

@@ -233,6 +233,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
     :host([mode=dock]) .dialog-content {
       contain: strict;
+      position: absolute;
     }
 
     :host([alternative-dock-target]) .drag-handle {

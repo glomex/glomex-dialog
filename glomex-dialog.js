@@ -27,6 +27,7 @@ const getAlternativeDockTarget = (element) => {
   let dockTargetElement;
   if (dockTarget) {
     dockTargetElement = document.querySelector(dockTarget);
+    if (!dockTargetElement) return null;
     const intersection = getViewportIntersection(dockTargetElement);
     if (intersection && intersection.width > 0 && intersection.height > 0) {
       return dockTargetElement;
@@ -77,7 +78,7 @@ const animateFromTo = (element, {
     const deltaScale = toRect.width / width;
 
     element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
-    element.style.transitionProperty = 'transform, opacity';
+    element.style.transitionProperty = 'transform, opacity, height';
     element.style.transformOrigin = 'top left';
     element.style.transitionTimingFunction = 'ease-out';
     if (!downscale) {

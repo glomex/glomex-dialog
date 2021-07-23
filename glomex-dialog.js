@@ -3,11 +3,15 @@ const DEFAULT_DOCK_TARGET_INSET = '0px 10px auto auto';
 const DEFAULT_TRANSITION_DURATION = 300;
 const DOCK_Z_INDEX = 9999999;
 const LIGHTBOX_Z_INDEX = 10000000;
+const MIN_DOCK_WIDTH = 192;
+const MAX_DOCK_WIDTH = 400;
 
 const updateViewPortWidth = (element) => {
   let viewPortWidth = window.innerWidth * 0.3;
-  if (viewPortWidth < 192) {
-    viewPortWidth = 192;
+  if (viewPortWidth < MIN_DOCK_WIDTH) {
+    viewPortWidth = MIN_DOCK_WIDTH;
+  } else if (viewPortWidth > MAX_DOCK_WIDTH) {
+    viewPortWidth = MAX_DOCK_WIDTH;
   }
   element.shadowRoot.querySelector('.dock-target').style.width = `${viewPortWidth}px`;
 };

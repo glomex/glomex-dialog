@@ -697,6 +697,11 @@ function connectDragAndDrop(element) {
     initialX = coords.x - visualViewport.offsetLeft;
     initialY = coords.y - visualViewport.offsetTop;
     dockTargetRect = dockTarget.getBoundingClientRect();
+    // reevaluate the dockTarget dimensions to make sure clamping
+    // when moving around is not using outdated values
+    setTimeout(() => {
+      dockTargetRect = dockTarget.getBoundingClientRect();
+    }, 1);
 
     // prevent document scrolling on iOS
     window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });

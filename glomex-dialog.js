@@ -77,32 +77,35 @@ const animateFromTo = (element, {
     element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
     element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
 
-    const deltaX = toRect.left - fromRect.left;
-    const deltaY = toRect.top - fromRect.top;
-    const deltaScale = toRect.width / width;
+    window.requestAnimationFrame(() => {
+      const deltaX = toRect.left - fromRect.left;
+      const deltaY = toRect.top - fromRect.top;
+      const deltaScale = toRect.width / width;
 
-    element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
-    element.style.transitionProperty = 'transform, opacity, height';
-    element.style.transformOrigin = 'top left';
-    element.style.transitionTimingFunction = 'ease-out';
-    if (!downscale) {
-      // during animation is running we wait a little before scaling up
-      // to avoid the effect that the dialog gets first scaled up
-      setTimeout(() => {
+      element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
+      element.style.transitionProperty = 'transform, opacity, height';
+      element.style.transformOrigin = 'top left';
+      element.style.transitionTimingFunction = 'ease-out';
+      if (!downscale) {
         element.firstElementChild.style.width = `${toRect.width}px`;
         element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
-      }, animate ? DEFAULT_TRANSITION_DURATION / 2 : 0);
-    }
-    if (animate) {
-      element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-    } else {
-      element.style.transitionDuration = null;
-      setTimeout(() => {
+        element.firstElementChild.style.transitionProperty = 'width';
+        element.firstElementChild.style.transformOrigin = 'top left';
+        element.firstElementChild.style.transitionTimingFunction = 'ease-out';
+      }
+      if (animate) {
         element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-      }, 0);
-    }
-    resolve({
-      scale: downscale ? deltaScale : 1,
+        element.firstElementChild.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+      } else {
+        element.style.transitionDuration = null;
+        element.firstElementChild.style.transitionDuration = null;
+        element.firstElementChild.style.transitionDelay = null;
+      }
+      window.requestAnimationFrame(() => {
+        resolve({
+          scale: downscale ? deltaScale : 1,
+        });
+      });
     });
   });
 });
@@ -432,21 +435,41 @@ class GlomexDialogElement extends window.HTMLElement {
           }
         });
       } else if (newValue === 'inline') {
-        dialogContent.style.position = 'absolute';
-        dialogContent.style.transform = null;
-        dialogContent.firstElementChild.style.transform = null;
-        dialogContent.firstElementChild.style.width = null;
-        dialogContent.style.top = null;
-        dialogContent.style.left = null;
-        if (!this._wasInHiddenMode && oldValue === 'dock') {
-          dialogContent.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-          dialogContent.style.transitionTimingFunction = 'ease-out';
-        }
-        setTimeout(() => {
-          if (this.getAttribute('mode') === 'inline') {
-            dialogContent.setAttribute('style', '');
+        const goToInline = () => {
+          dialogContent.style.position = 'absolute';
+          dialogContent.style.transform = null;
+          dialogContent.firstElementChild.style.transform = null;
+          dialogContent.firstElementChild.style.width = null;
+          dialogContent.style.top = null;
+          dialogContent.style.left = null;
+          if (!this._wasInHiddenMode && oldValue === 'dock') {
+            dialogContent.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+            dialogContent.firstElementChild.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+            dialogContent.style.transitionTimingFunction = 'ease-out';
           }
-        }, DEFAULT_TRANSITION_DURATION);
+          setTimeout(() => {
+            if (this.getAttribute('mode') === 'inline') {
+              dialogContent.setAttribute('style', '');
+              dialogContent.firstElementChild.setAttribute('style', '');
+            }
+          }, DEFAULT_TRANSITION_DURATION);
+        };
+        if (oldValue === 'dock') {
+          // reposition element without animation
+          // so that new position with scroll gets calculated
+          animateFromTo(dialogContent, {
+            from: placeholder,
+            to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
+            animate: false,
+            aspectRatio: getAspectRatioFromStrings([
+              this.getAttribute('dock-aspect-ratio'),
+              this.getAttribute('aspect-ratio'),
+            ]),
+            downscale: this.getAttribute('dock-downscale'),
+          }).then(goToInline);
+        } else if (oldValue !== 'inline') {
+          goToInline();
+        }
         this._wasInHiddenMode = false;
       } else if (newValue === 'lightbox') {
         // prevent scrolling

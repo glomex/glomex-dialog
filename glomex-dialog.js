@@ -78,7 +78,7 @@ const animateFromTo = (element, {
     element.style.position = 'fixed';
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
-    if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+    if (navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1) {
       // somehow safari animates to the wrong position initially
       // and then snaps into place when the aspect-ratio is not stable
       element.style.minHeight = `${toHeight}px`;
@@ -89,11 +89,11 @@ const animateFromTo = (element, {
     element.style.transform = 'scale(1.001)';
     element.style.overflow = 'hidden';
 
-    window.requestAnimationFrame(() => {
-      const deltaX = toRect.left - fromRect.left;
-      const deltaY = toRect.top - fromRect.top;
-      const deltaScale = toRect.width / width;
+    const deltaX = toRect.left - fromRect.left;
+    const deltaY = toRect.top - fromRect.top;
+    const deltaScale = toRect.width / width;
 
+    const moveDialog = () => {
       element.style.height = `${toHeight}px`;
       element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / toHeight) * 100}%) scale(${deltaScale})`;
       element.style.transitionProperty = 'transform, opacity, height';
@@ -114,10 +114,20 @@ const animateFromTo = (element, {
         element.firstElementChild.style.transitionDuration = null;
         element.firstElementChild.style.transitionDelay = null;
       }
-      window.requestAnimationFrame(() => {
-        resolve({
-          scale: downscale ? deltaScale : 1,
-        });
+    };
+
+    if (!animate) {
+      moveDialog();
+      resolve({
+        scale: downscale ? deltaScale : 1,
+      });
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      moveDialog();
+      resolve({
+        scale: downscale ? deltaScale : 1,
       });
     });
   });
@@ -485,7 +495,11 @@ class GlomexDialogElement extends window.HTMLElement {
               this.getAttribute('aspect-ratio'),
             ]),
             downscale: this.getAttribute('dock-downscale'),
-          }).then(goToInline);
+          }).then(() => {
+            window.requestAnimationFrame(() => {
+              goToInline();
+            });
+          });
         } else if (oldValue !== 'inline') {
           goToInline();
         }

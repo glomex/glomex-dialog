@@ -61,7 +61,8 @@ const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
 };
 
 const animateFromTo = (element, {
-  from, to, animate = false, aspectRatio, downscale = false,
+  from, to, animate = false, aspectRatio,
+  initialAspectRatio, downscale = false,
 } = {}) => new Promise((resolve) => {
   window.requestAnimationFrame(() => {
     const fromRect = from.getBoundingClientRect();
@@ -69,20 +70,25 @@ const animateFromTo = (element, {
     const visualViewport = getVisualViewport();
 
     const width = fromRect.width === 0 ? NON_VISIBLE_WIDTH : fromRect.width;
-    const height = width / aspectRatio;
+    const height = fromRect.height === 0
+      ? (NON_VISIBLE_WIDTH / initialAspectRatio)
+      : fromRect.height;
+    const toHeight = width / aspectRatio;
 
     element.style.position = 'fixed';
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
     element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
     element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
+    element.style.transform = 'scale(1.001)';
 
     window.requestAnimationFrame(() => {
       const deltaX = toRect.left - fromRect.left;
       const deltaY = toRect.top - fromRect.top;
       const deltaScale = toRect.width / width;
 
-      element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / height) * 100}%) scale(${deltaScale})`;
+      element.style.height = `${toHeight}px`;
+      element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / toHeight) * 100}%) scale(${deltaScale})`;
       element.style.transitionProperty = 'transform, opacity, height';
       element.style.transformOrigin = 'top left';
       element.style.transitionTimingFunction = 'ease-out';
@@ -418,6 +424,9 @@ class GlomexDialogElement extends window.HTMLElement {
           from: placeholder,
           to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
           animate: !this._wasInHiddenMode,
+          initialAspectRatio: getAspectRatioFromStrings([
+            this.getAttribute('aspect-ratio'),
+          ]),
           aspectRatio: getAspectRatioFromStrings([
             this.getAttribute('dock-aspect-ratio'),
             this.getAttribute('aspect-ratio'),
@@ -437,7 +446,7 @@ class GlomexDialogElement extends window.HTMLElement {
       } else if (newValue === 'inline') {
         const goToInline = () => {
           dialogContent.style.position = 'absolute';
-          dialogContent.style.transform = null;
+          dialogContent.style.transform = 'scale(1.001)';
           dialogContent.firstElementChild.style.transform = null;
           dialogContent.firstElementChild.style.width = null;
           dialogContent.style.top = null;
@@ -461,6 +470,9 @@ class GlomexDialogElement extends window.HTMLElement {
             from: placeholder,
             to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
             animate: false,
+            initialAspectRatio: getAspectRatioFromStrings([
+              this.getAttribute('aspect-ratio'),
+            ]),
             aspectRatio: getAspectRatioFromStrings([
               this.getAttribute('dock-aspect-ratio'),
               this.getAttribute('aspect-ratio'),
@@ -552,6 +564,9 @@ class GlomexDialogElement extends window.HTMLElement {
         from: this.shadowRoot.querySelector('.placeholder'),
         to: getAlternativeDockTarget(this) || getDefaultDockTarget(this),
         animate: false,
+        initialAspectRatio: getAspectRatioFromStrings([
+          this.getAttribute('aspect-ratio'),
+        ]),
         aspectRatio: getAspectRatioFromStrings([
           this.getAttribute('dock-aspect-ratio'),
           this.getAttribute('aspect-ratio'),

@@ -78,9 +78,16 @@ const animateFromTo = (element, {
     element.style.position = 'fixed';
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
+    if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+      // somehow safari animates to the wrong position initially
+      // and then snaps into place when the aspect-ratio is not stable
+      element.style.minHeight = `${toHeight}px`;
+    }
+
     element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
     element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
     element.style.transform = 'scale(1.001)';
+    element.style.overflow = 'hidden';
 
     window.requestAnimationFrame(() => {
       const deltaX = toRect.left - fromRect.left;

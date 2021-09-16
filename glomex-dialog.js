@@ -759,34 +759,34 @@ function connectDragAndDrop(element) {
 
     // prevent document scrolling on iOS
     window.addEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
-    document.addEventListener('mousemove', onMove, false);
-    document.addEventListener('touchmove', onMove, false);
-    document.addEventListener('mouseup', mouseUp, false);
-    document.addEventListener('touchend', mouseUp, false);
-    document.addEventListener('touchcancel', mouseUp, false);
+    document.addEventListener('mousemove', onMove, { passive: true });
+    document.addEventListener('touchmove', onMove, { passive: true });
+    document.addEventListener('mouseup', mouseUp, { passive: true });
+    document.addEventListener('touchend', mouseUp, { passive: true });
+    document.addEventListener('touchcancel', mouseUp, { passive: true });
   };
 
   function disconnectListeners() {
     window.removeEventListener('touchmove', onNonPassiveTouchMove, { passive: false, once: true });
-    document.removeEventListener('mousemove', onMove, false);
-    document.removeEventListener('touchmove', onMove, false);
-    document.removeEventListener('mouseup', mouseUp, false);
-    document.removeEventListener('touchend', mouseUp, false);
-    document.removeEventListener('touchcancel', mouseUp, false);
+    document.removeEventListener('mousemove', onMove, { passive: true });
+    document.removeEventListener('touchmove', onMove, { passive: true });
+    document.removeEventListener('mouseup', mouseUp, { passive: true });
+    document.removeEventListener('touchend', mouseUp, { passive: true });
+    document.removeEventListener('touchcancel', mouseUp, { passive: true });
   }
 
   function fixIosHover() {}
 
   // get hover working on iOS
-  document.documentElement.addEventListener('touchstart', fixIosHover, false);
-  dragHandle.addEventListener('mousedown', mouseDown, false);
-  dragHandle.addEventListener('touchstart', mouseDown, false);
+  document.documentElement.addEventListener('touchstart', fixIosHover, { passive: true });
+  dragHandle.addEventListener('mousedown', mouseDown, { passive: false });
+  dragHandle.addEventListener('touchstart', mouseDown, { passive: true });
 
   return () => {
     mouseUp();
-    document.documentElement.removeEventListener('touchstart', fixIosHover, false);
-    dragHandle.removeEventListener('mousedown', mouseDown, false);
-    dragHandle.removeEventListener('touchstart', mouseDown, false);
+    document.documentElement.removeEventListener('touchstart', fixIosHover, { passive: true });
+    dragHandle.removeEventListener('mousedown', mouseDown, { passive: false });
+    dragHandle.removeEventListener('touchstart', mouseDown, { passive: true });
   };
 }
 

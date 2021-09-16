@@ -533,7 +533,7 @@ class GlomexDialogElement extends window.HTMLElement {
         new CustomEvent('modechange', {
           detail: {
             mode: newValue,
-            internal: this._internalModeChange
+            internal: this._internalModeChange,
           },
           bubbles: true,
           composed: true,

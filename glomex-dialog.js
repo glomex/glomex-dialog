@@ -365,14 +365,17 @@ class GlomexDialogElement extends window.HTMLElement {
     Object.assign(dockTarget.style, toPositions(DEFAULT_DOCK_TARGET_INSET));
 
     this._wasInHiddenMode = false;
+    this._internalModeChange = false;
 
     this.addEventListener('click', ({ target }) => {
       if (this.classList.contains('dragging')) return;
       // allows clicks within GlomexDialog and on a slotted placeholder
       if (!(target instanceof GlomexDialogElement) && !target.assignedSlot) return;
       if (this._wasInHiddenMode) {
+        this._internalModeChange = true;
         this.setAttribute('mode', 'hidden');
       } else {
+        this._internalModeChange = true;
         this.setAttribute('mode', 'inline');
       }
     });
@@ -530,11 +533,13 @@ class GlomexDialogElement extends window.HTMLElement {
         new CustomEvent('modechange', {
           detail: {
             mode: newValue,
+            internal: this._internalModeChange
           },
           bubbles: true,
           composed: true,
         }),
       );
+      this._internalModeChange = false;
     }
 
     if (name === 'dock-target') {

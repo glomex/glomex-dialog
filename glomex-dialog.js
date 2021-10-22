@@ -324,14 +324,14 @@ class GlomexDialogElement extends window.HTMLElement {
 
     :host([mode=lightbox]):before {
       content: " ";
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--lightbox-background, rgba(0, 0, 0, 0.5));
       display: block;
       position: fixed;
       top: 0;
       right: 0;
       left: 0;
       bottom: 0;
-      z-index: 1;
+      z-index: ${LIGHTBOX_Z_INDEX};
     }
 
     @keyframes fade-in {

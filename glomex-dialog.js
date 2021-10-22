@@ -312,14 +312,14 @@ class GlomexDialogElement extends window.HTMLElement {
       animation-duration: 200ms;
       animation-timing-function: ease-in;
       position: fixed;
-      margin: 1vh auto;
+      margin: 5vh auto;
       top: 0;
       left: 50%;
       transform: translateX(-50%);
       z-index: ${LIGHTBOX_Z_INDEX};
-      max-height: 40vh;
+      max-height: 28vh;
       max-width: 95vw;
-      width: 850px;
+      width: 1200px;
     }
 
     :host([mode=lightbox]):before {
@@ -371,11 +371,10 @@ class GlomexDialogElement extends window.HTMLElement {
       if (this.classList.contains('dragging')) return;
       // allows clicks within GlomexDialog and on a slotted placeholder
       if (!(target instanceof GlomexDialogElement) && !target.assignedSlot) return;
+      this._internalModeChange = true;
       if (this._wasInHiddenMode) {
-        this._internalModeChange = true;
         this.setAttribute('mode', 'hidden');
       } else {
-        this._internalModeChange = true;
         this.setAttribute('mode', 'inline');
       }
     });
@@ -404,15 +403,40 @@ class GlomexDialogElement extends window.HTMLElement {
       this.refreshDockDialog();
     };
     window.addEventListener('resize', onResize);
-
     this._disconnectResize = () => {
       window.removeEventListener('resize', onResize);
+    };
+
+    const onKeyup = (event) => {
+      const currentMode = this.getAttribute('mode');
+      if (currentMode !== 'lightbox') return;
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        this._internalModeChange = true;
+        if (this._wasInHiddenMode) {
+          this.setAttribute('mode', 'hidden');
+        } else {
+          this.setAttribute('mode', 'inline');
+        }
+      }
+      // restrict tab behavior in lightbox mode
+      if (event.key === 'Tab') {
+        const { activeElement } = window.document;
+        if (activeElement !== this && !this.contains(activeElement)) {
+          const dialogContent = this.shadowRoot.querySelector('.dialog-content');
+          dialogContent.focus();
+        }
+      }
+    };
+    window.document.addEventListener('keyup', onKeyup);
+    this._disconnectKeyup = () => {
+      window.document.removeEventListener('keyup', onKeyup);
     };
   }
 
   disconnectedCallback() {
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
     this._disconnectResize();
+    this._disconnectKeyup();
   }
 
   static get observedAttributes() {
@@ -435,6 +459,9 @@ class GlomexDialogElement extends window.HTMLElement {
       } else {
         placeholder.style.display = null;
       }
+      window.removeEventListener('touchmove', this._onNonPassiveTouchMove, {
+        passive: false,
+      });
 
       if (newValue === 'dock') {
         this.parentElement.removeAttribute('modal');
@@ -516,10 +543,15 @@ class GlomexDialogElement extends window.HTMLElement {
         // TODO: rethink focus-handling?
         dialogContent.setAttribute('tabindex', '-1');
         dialogContent.focus();
+        // prevent document scrolling on iOS
+        this._onNonPassiveTouchMove = (event) => {
+          event.preventDefault();
+        };
+        window.addEventListener('touchmove', this._onNonPassiveTouchMove, {
+          passive: false,
+        });
       } else if (newValue === 'hidden') {
         this._wasInHiddenMode = true;
-      } else {
-        this._wasInHiddenMode = false;
       }
 
       if (newValue !== 'lightbox') {

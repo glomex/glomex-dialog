@@ -169,6 +169,33 @@ function pointerCoords(e) {
   };
 }
 
+function getActiveElement(root) {
+  const activeEl = root.activeElement;
+
+  if (!activeEl) {
+    return null;
+  }
+
+  if (activeEl.shadowRoot) {
+    return getActiveElement(activeEl.shadowRoot);
+  }
+  return activeEl;
+}
+
+function isInDocument(element, document) {
+  let currentElement = element;
+  while (currentElement && currentElement.parentNode) {
+    if (currentElement.parentNode === document) {
+      return true;
+    } if (currentElement.parentNode instanceof window.DocumentFragment) {
+      currentElement = currentElement.parentNode.host;
+    } else {
+      currentElement = currentElement.parentNode;
+    }
+  }
+  return false;
+}
+
 /**
  * A dialog web component that allows docking a video player or
  * putting it in a lightbox. It allows implementing a similar
@@ -450,8 +477,8 @@ class GlomexDialogElement extends window.HTMLElement {
       }
       // restrict tab behavior in lightbox mode
       if (event.key === 'Tab') {
-        const { activeElement } = window.document;
-        if (activeElement !== this && !this.contains(activeElement)) {
+        const activeElement = getActiveElement(window.document);
+        if (activeElement !== this && !isInDocument(activeElement, this)) {
           const dialogContent = this.shadowRoot.querySelector('.dialog-content');
           dialogContent.focus();
         }

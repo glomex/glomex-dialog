@@ -334,6 +334,23 @@ class GlomexDialogElement extends window.HTMLElement {
       z-index: ${LIGHTBOX_Z_INDEX};
     }
 
+    @media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+      :host([mode=lightbox]) .dialog-content {
+        animation-name: none;
+        margin: 0;
+        top: 0;
+        left: 0;
+        transform: none;
+        height: 100%;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      :host([mode=lightbox]):before {
+        background: #000;
+      }
+    }
+
     @keyframes fade-in {
       0% {
         opacity: 0;
@@ -398,7 +415,20 @@ class GlomexDialogElement extends window.HTMLElement {
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
     this._disconnectDragAndDrop = connectDragAndDrop(this);
 
+    const adjustForMobileLandScapeModeInLightbox = () => {
+      if (this.getAttribute('mode') !== 'lightbox') return;
+      const mobileLandscapeSelector = '(hover: none) and (pointer: coarse) and (orientation: landscape)';
+      if (window.matchMedia(mobileLandscapeSelector).matches) {
+        // allow scrolling in mobile landscape
+        // so that the user can scroll down to remove the browser bar
+        window.document.body.style.overflow = null;
+      } else {
+        window.document.body.style.overflow = 'hidden';
+      }
+    };
+
     const onResize = () => {
+      adjustForMobileLandScapeModeInLightbox();
       updateViewPortWidth(this);
       this.refreshDockDialog();
     };

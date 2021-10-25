@@ -415,7 +415,7 @@ class GlomexDialogElement extends window.HTMLElement {
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
     this._disconnectDragAndDrop = connectDragAndDrop(this);
 
-    const adjustForMobileLandScapeModeInLightbox = () => {
+    const adjustLightboxModeForLandscapeOnMobile = () => {
       if (this.getAttribute('mode') !== 'lightbox') return;
       const mobileLandscapeSelector = '(hover: none) and (pointer: coarse) and (orientation: landscape)';
       if (window.matchMedia(mobileLandscapeSelector).matches) {
@@ -428,7 +428,7 @@ class GlomexDialogElement extends window.HTMLElement {
     };
 
     const onResize = () => {
-      adjustForMobileLandScapeModeInLightbox();
+      adjustLightboxModeForLandscapeOnMobile();
       updateViewPortWidth(this);
       this.refreshDockDialog();
     };

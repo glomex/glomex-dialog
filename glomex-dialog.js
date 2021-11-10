@@ -209,6 +209,8 @@ class GlomexDialogElement extends window.HTMLElement {
     :host {
       display: block;
       position: relative;
+      --placeholder-background-color: rgba(200, 200, 200, 0.8);
+      --lightbox-background: rgba(0, 0, 0, 0.5);
     }
 
     .dock-target {

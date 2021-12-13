@@ -66,6 +66,7 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
     <option value="custom-value">custom-value</option>
   </select>
@@ -119,6 +120,7 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -178,6 +180,7 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -225,6 +228,8 @@ export default () => {
     <option value="hidden" selected>hidden</option>
     <option value="inline">inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -281,6 +286,8 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -382,6 +389,7 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -474,6 +482,7 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -543,11 +552,14 @@ export default () => {
         return;
       }
       const currentMode = glomexDialog.getAttribute('mode');
+      const dockMode = select.current.value === 'sticky' ? 'sticky' : 'dock';
       if (currentMode === 'lightbox' || !currentMode) {
         return;
       }
-      if (entries[0].intersectionRatio < 1 && glomexDialog.getAttribute('mode') !== 'dock') {
-        glomexDialog.setAttribute('mode', 'dock');
+      if (entries[0].intersectionRatio < 1 && (
+        currentMode !== dockMode
+      )) {
+        glomexDialog.setAttribute('mode', dockMode);
       } else if (entries[0].intersectionRatio === 1) {
         glomexDialog.setAttribute('mode', 'inline');
       }
@@ -567,14 +579,15 @@ export default () => {
   return html`
   <p>
   <select ref=${select}>
-    <option value="hidden" selected>hidden</option>
+    <option value="hidden">hidden</option>
     <option value="inline">inline</option>
-    <option value="dock">dock</option>
+    <option value="dock" selected>dock</option>
+    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
-  <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="50px 10px auto auto">
+  <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="48px 10px auto auto">
   <div slot="dialog-element">
     <div style="position: relative;">
       <div class="placeholder-16x9"></div>

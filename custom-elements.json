@@ -33,22 +33,67 @@
           ],
           "attributes": [
             {
-              "name": "mode"
+              "name": "mode",
+              "type": {
+                "text": "string"
+              },
+              "description": "Can take the values \"hidden\", \"inline\", \"dock\", \"lightbox\" or \"sticky\""
             },
             {
-              "name": "aspect-ratio"
+              "name": "aspect-ratio",
+              "type": {
+                "text": "string"
+              },
+              "description": "The aspect-ratio for the inline element. Default is 16:9"
             },
             {
-              "name": "dock-target"
+              "name": "dock-target",
+              "type": {
+                "text": "string"
+              },
+              "description": "A dom-element with position:fixed where mode=dock should animate to"
             },
             {
-              "name": "dock-target-inset"
+              "name": "dock-target-inset",
+              "type": {
+                "text": "string"
+              },
+              "description": "Allows positions the dock target (which corner to dock to)"
             },
             {
-              "name": "dock-aspect-ratio"
+              "name": "dock-aspect-ratio",
+              "type": {
+                "text": "string"
+              },
+              "description": "The aspect-ratio when the element is mode=dock"
             },
             {
-              "name": "dock-downscale"
+              "name": "dock-sticky-target-top",
+              "type": {
+                "text": "string"
+              },
+              "description": "The top distance for mode=sticky in pixels (defaults to 0)"
+            },
+            {
+              "name": "dock-sticky-aspect-ratio",
+              "type": {
+                "text": "string"
+              },
+              "description": "The aspect-ratio when the element is mode=sticky"
+            },
+            {
+              "name": "dock-downscale",
+              "type": {
+                "text": "string"
+              },
+              "description": "Do you want to scale the element when mode=dock"
+            },
+            {
+              "name": "dock-transition-duration",
+              "type": {
+                "text": "string"
+              },
+              "description": "Time to animate from inline to dock and back in milliseconds (default is 300ms)"
             }
           ],
           "superclass": {

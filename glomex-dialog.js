@@ -26,6 +26,11 @@ const updateDockAspectRatio = (element, aspectRatio) => {
     .style.paddingTop = `${(1 / aspectRatio) * 100}%`;
 };
 
+const updateDockStickyAspectRatio = (element, aspectRatio) => {
+  element.shadowRoot.querySelector('.dock-sticky-target .aspect-ratio-box')
+    .style.paddingTop = `${(1 / aspectRatio) * 100}%`;
+};
+
 const getAlternativeDockTarget = (element) => {
   const dockTarget = element.getAttribute('dock-target');
   let dockTargetElement;
@@ -64,6 +69,7 @@ const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
 const moveFromTo = (element, {
   from, to, animate = false, aspectRatio,
   initialAspectRatio, downscale = false,
+  transitionDuration,
 } = {}) => new Promise((resolve) => {
   const fromRect = from.getBoundingClientRect();
   const toRect = to.getBoundingClientRect();
@@ -107,8 +113,8 @@ const moveFromTo = (element, {
       element.firstElementChild.style.transitionTimingFunction = 'ease-out';
     }
     if (animate) {
-      element.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-      element.firstElementChild.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+      element.style.transitionDuration = `${transitionDuration}ms`;
+      element.firstElementChild.style.transitionDuration = `${transitionDuration}ms`;
     } else {
       element.style.transitionDuration = null;
       element.firstElementChild.style.transitionDuration = null;
@@ -199,6 +205,18 @@ function isInDocument(element, document) {
  * A dialog web component that allows docking a video player or
  * putting it in a lightbox. It allows implementing a similar
  * feature as amp-video-docking but without using AMP.
+ *
+ * @attr {string} mode - Can take the values "hidden", "inline", "dock", "lightbox" or "sticky"
+ * @attr {string} aspect-ratio - The aspect-ratio for the inline element. Default is 16:9
+ * @attr {string} dock-target - A dom-element with position:fixed where mode=dock should animate to
+ * @attr {string} dock-target-inset - Allows positions the dock target (which corner to dock to)
+ * @attr {string} dock-aspect-ratio - The aspect-ratio when the element is mode=dock
+ * @attr {string} dock-sticky-target-top - The top distance for mode=sticky in pixels
+ *   (defaults to 0)
+ * @attr {string} dock-sticky-aspect-ratio - The aspect-ratio when the element is mode=sticky
+ * @attr {string} dock-downscale - Do you want to scale the element when mode=dock
+ * @attr {string} dock-transition-duration - Time to animate from inline to dock and back
+ *   in milliseconds (default is 300ms)
  */
 class GlomexDialogElement extends window.HTMLElement {
   constructor() {
@@ -447,6 +465,10 @@ class GlomexDialogElement extends window.HTMLElement {
       this.getAttribute('dock-aspect-ratio'),
       this.getAttribute('aspect-ratio'),
     ]));
+    updateDockStickyAspectRatio(this, getAspectRatioFromStrings([
+      this.getAttribute('dock-sticky-aspect-ratio'),
+      this.getAttribute('aspect-ratio'),
+    ]));
 
     if (!this.hasAttribute('mode')) {
       // default-mode is "inline"
@@ -518,14 +540,20 @@ class GlomexDialogElement extends window.HTMLElement {
       'dock-target',
       'dock-target-inset',
       'dock-aspect-ratio',
+      'dock-sticky-target-top',
+      'dock-sticky-aspect-ratio',
       'dock-downscale',
+      'dock-transition-duration',
     ];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     let moveTo;
+    let aspectRatios;
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     const placeholder = this.shadowRoot.querySelector('.placeholder');
+    const transitionDuration = this.getAttribute('dock-transition-duration')
+      || DEFAULT_TRANSITION_DURATION;
     if (name === 'mode') {
       if (this._wasInHiddenMode && (
         newValue === 'lightbox'
@@ -541,6 +569,12 @@ class GlomexDialogElement extends window.HTMLElement {
       });
 
       if (newValue === 'dock' || newValue === 'sticky') {
+        aspectRatios = [
+          newValue === 'sticky'
+            ? this.getAttribute('dock-sticky-aspect-ratio')
+            : this.getAttribute('dock-aspect-ratio'),
+          this.getAttribute('aspect-ratio'),
+        ];
         this.parentElement.removeAttribute('modal');
         moveTo = newValue === 'dock'
           ? getAlternativeDockTarget(this) || getDefaultDockTarget(this)
@@ -554,11 +588,9 @@ class GlomexDialogElement extends window.HTMLElement {
           initialAspectRatio: getAspectRatioFromStrings([
             this.getAttribute('aspect-ratio'),
           ]),
-          aspectRatio: getAspectRatioFromStrings([
-            this.getAttribute('dock-aspect-ratio'),
-            this.getAttribute('aspect-ratio'),
-          ]),
+          aspectRatio: getAspectRatioFromStrings(aspectRatios),
           downscale: this.getAttribute('dock-downscale'),
+          transitionDuration,
         }).then(({ scale }) => {
           if (this.getAttribute('dock-downscale')) {
             this.dispatchEvent(
@@ -579,8 +611,8 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogContent.style.top = null;
           dialogContent.style.left = null;
           if (!this._wasInHiddenMode && (oldValue === 'dock' || oldValue === 'sticky')) {
-            dialogContent.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
-            dialogContent.firstElementChild.style.transitionDuration = `${DEFAULT_TRANSITION_DURATION}ms`;
+            dialogContent.style.transitionDuration = `${transitionDuration}ms`;
+            dialogContent.firstElementChild.style.transitionDuration = `${transitionDuration}ms`;
             dialogContent.style.transitionTimingFunction = 'ease-out';
           }
           setTimeout(() => {
@@ -588,9 +620,15 @@ class GlomexDialogElement extends window.HTMLElement {
               dialogContent.setAttribute('style', '');
               dialogContent.firstElementChild.setAttribute('style', '');
             }
-          }, DEFAULT_TRANSITION_DURATION);
+          }, transitionDuration);
         };
         if (oldValue === 'dock' || oldValue === 'sticky') {
+          aspectRatios = [
+            newValue === 'sticky'
+              ? this.getAttribute('dock-sticky-aspect-ratio')
+              : this.getAttribute('dock-aspect-ratio'),
+            this.getAttribute('aspect-ratio'),
+          ];
           moveTo = oldValue === 'dock'
             ? getAlternativeDockTarget(this) || getDefaultDockTarget(this)
             : getDockStickyTarget(this);
@@ -603,11 +641,9 @@ class GlomexDialogElement extends window.HTMLElement {
             initialAspectRatio: getAspectRatioFromStrings([
               this.getAttribute('aspect-ratio'),
             ]),
-            aspectRatio: getAspectRatioFromStrings([
-              this.getAttribute('dock-aspect-ratio'),
-              this.getAttribute('aspect-ratio'),
-            ]),
+            aspectRatio: getAspectRatioFromStrings(aspectRatios),
             downscale: this.getAttribute('dock-downscale'),
+            transitionDuration,
           }).then(() => {
             window.requestAnimationFrame(() => {
               goToInline();
@@ -669,10 +705,12 @@ class GlomexDialogElement extends window.HTMLElement {
         this.shadowRoot.querySelector('.dock-target').style,
         positions,
       );
-      this.shadowRoot.querySelector('.dock-sticky-target').style.top = (
-        !positions.top
-        || positions.top === 'auto'
-      ) ? '0px' : positions.top;
+      this.refreshDockDialog();
+    }
+
+    if (name === 'dock-sticky-target-top') {
+      this.shadowRoot.querySelector('.dock-sticky-target')
+        .style.top = `${newValue || 0}px`;
       this.refreshDockDialog();
     }
 
@@ -685,6 +723,13 @@ class GlomexDialogElement extends window.HTMLElement {
     if (name === 'dock-aspect-ratio') {
       updateDockAspectRatio(this, getAspectRatioFromStrings([
         this.getAttribute('dock-aspect-ratio'),
+        this.getAttribute('aspect-ratio'),
+      ]));
+    }
+
+    if (name === 'dock-sticky-aspect-ratio') {
+      updateDockStickyAspectRatio(this, getAspectRatioFromStrings([
+        this.getAttribute('dock-sticky-aspect-ratio'),
         this.getAttribute('aspect-ratio'),
       ]));
     }
@@ -714,6 +759,13 @@ class GlomexDialogElement extends window.HTMLElement {
     dockStickyTarget.style.width = `${clientRect.width}px`;
     dockStickyTarget.style.height = `${clientRect.height}px`;
 
+    const aspectRatios = [
+      this.getAttribute('mode') === 'sticky'
+        ? this.getAttribute('dock-sticky-aspect-ratio')
+        : this.getAttribute('dock-aspect-ratio'),
+      this.getAttribute('aspect-ratio'),
+    ];
+
     if (mode === 'dock' || mode === 'sticky') {
       updateDockTargetState(this);
       moveFromTo(dialogContent, {
@@ -723,11 +775,9 @@ class GlomexDialogElement extends window.HTMLElement {
         initialAspectRatio: getAspectRatioFromStrings([
           this.getAttribute('aspect-ratio'),
         ]),
-        aspectRatio: getAspectRatioFromStrings([
-          this.getAttribute('dock-aspect-ratio'),
-          this.getAttribute('aspect-ratio'),
-        ]),
+        aspectRatio: getAspectRatioFromStrings(aspectRatios),
         downscale: this.getAttribute('dock-downscale'),
+        transitionDuration: 0,
       }).then(({ scale }) => {
         if (this.getAttribute('dock-downscale')) {
           this.dispatchEvent(

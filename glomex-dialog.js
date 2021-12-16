@@ -543,7 +543,6 @@ class GlomexDialogElement extends window.HTMLElement {
       'dock-sticky-target-top',
       'dock-sticky-aspect-ratio',
       'dock-downscale',
-      'dock-transition-duration',
     ];
   }
 

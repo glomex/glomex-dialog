@@ -603,6 +603,9 @@ class GlomexDialogElement extends window.HTMLElement {
         });
       } else if (newValue === 'inline') {
         const goToInline = () => {
+          // somehow this avoids CLS when switching between
+          // position "fixed" => "absolute"
+          dialogContent.style.display = 'grid';
           dialogContent.style.position = 'absolute';
           dialogContent.style.transform = 'scale(1.001)';
           dialogContent.firstElementChild.style.transform = null;

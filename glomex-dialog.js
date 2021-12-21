@@ -215,8 +215,6 @@ function isInDocument(element, document) {
  *   (defaults to 0)
  * @attr {string} dock-sticky-aspect-ratio - The aspect-ratio when the element is mode=sticky
  * @attr {string} dock-downscale - Do you want to scale the element when mode=dock
- * @attr {string} dock-transition-duration - Time to animate from inline to dock and back
- *   in milliseconds (default is 300ms)
  */
 class GlomexDialogElement extends window.HTMLElement {
   constructor() {
@@ -551,8 +549,7 @@ class GlomexDialogElement extends window.HTMLElement {
     let aspectRatios;
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     const placeholder = this.shadowRoot.querySelector('.placeholder');
-    const transitionDuration = this.getAttribute('dock-transition-duration')
-      || DEFAULT_TRANSITION_DURATION;
+    const transitionDuration = DEFAULT_TRANSITION_DURATION;
     if (name === 'mode') {
       if (this._wasInHiddenMode && (
         newValue === 'lightbox'

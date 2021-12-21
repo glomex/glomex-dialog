@@ -87,13 +87,6 @@
                 "text": "string"
               },
               "description": "Do you want to scale the element when mode=dock"
-            },
-            {
-              "name": "dock-transition-duration",
-              "type": {
-                "text": "string"
-              },
-              "description": "Time to animate from inline to dock and back in milliseconds (default is 300ms)"
             }
           ],
           "superclass": {

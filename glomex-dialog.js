@@ -84,6 +84,9 @@ const moveFromTo = (element, {
   element.style.position = 'fixed';
   element.style.width = `${width}px`;
   element.style.height = `${height}px`;
+  element.style.transform = 'scale(1)';
+  element.firstElementChild.style.transform = 'scale(1)';
+
   if (navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1) {
     // somehow safari animates to the wrong position initially
     // and then snaps into place when the aspect-ratio is not stable
@@ -92,8 +95,6 @@ const moveFromTo = (element, {
 
   element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
   element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
-  element.style.transform = 'scale(1.001)';
-  element.style.overflow = 'hidden';
 
   const deltaX = toRect.left - fromRect.left;
   const deltaY = toRect.top - fromRect.top;
@@ -108,7 +109,7 @@ const moveFromTo = (element, {
     if (!downscale) {
       element.firstElementChild.style.width = `${toRect.width}px`;
       element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
-      element.firstElementChild.style.transitionProperty = 'width';
+      element.firstElementChild.style.transitionProperty = 'scale';
       element.firstElementChild.style.transformOrigin = 'top left';
       element.firstElementChild.style.transitionTimingFunction = 'ease-out';
     }
@@ -240,7 +241,6 @@ class GlomexDialogElement extends window.HTMLElement {
 
     .aspect-ratio-box {
       height: 0;
-      overflow: hidden;
     }
 
     .placeholder {
@@ -283,7 +283,9 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     .dialog-inverse-scale-element {
-      will-change: transform, transition, width, height, top, left, opacity;
+      width: 100%;
+      max-height: 100%;
+      will-change: transform, width, height;
       transform-origin: top left;
     }
 
@@ -312,7 +314,6 @@ class GlomexDialogElement extends window.HTMLElement {
 
     :host([mode=dock]) .dialog-content,
     :host([mode=sticky]) .dialog-content {
-      contain: strict;
       position: absolute;
     }
 
@@ -604,9 +605,9 @@ class GlomexDialogElement extends window.HTMLElement {
           // position "fixed" => "absolute"
           dialogContent.style.display = 'grid';
           dialogContent.style.position = 'absolute';
-          dialogContent.style.transform = 'scale(1.001)';
-          dialogContent.firstElementChild.style.transform = null;
-          dialogContent.firstElementChild.style.width = null;
+          dialogContent.style.transform = 'scale(1)';
+          dialogContent.firstElementChild.style.transform = 'scale(1)';
+          dialogContent.firstElementChild.style.width = null
           dialogContent.style.top = null;
           dialogContent.style.left = null;
           if (!this._wasInHiddenMode && (oldValue === 'dock' || oldValue === 'sticky')) {
@@ -755,8 +756,13 @@ class GlomexDialogElement extends window.HTMLElement {
       ? getAlternativeDockTarget(this) || getDefaultDockTarget(this)
       : getDockStickyTarget(this);
 
-    dockStickyTarget.style.width = `${clientRect.width}px`;
-    dockStickyTarget.style.height = `${clientRect.height}px`;
+    let stickyWidth = clientRect.width;
+    if (stickyWidth >= MAX_DOCK_WIDTH) {
+      stickyWidth = MAX_DOCK_WIDTH;
+    }
+
+    dockStickyTarget.style.width = `${stickyWidth}px`;
+    dockStickyTarget.style.height = `${clientRect.height * (stickyWidth / clientRect.width)}px`;
 
     const aspectRatios = [
       this.getAttribute('mode') === 'sticky'

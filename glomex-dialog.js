@@ -607,7 +607,7 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogContent.style.position = 'absolute';
           dialogContent.style.transform = 'scale(1)';
           dialogContent.firstElementChild.style.transform = 'scale(1)';
-          dialogContent.firstElementChild.style.width = null
+          dialogContent.firstElementChild.style.width = null;
           dialogContent.style.top = null;
           dialogContent.style.left = null;
           if (!this._wasInHiddenMode && (oldValue === 'dock' || oldValue === 'sticky')) {

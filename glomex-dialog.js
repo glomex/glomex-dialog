@@ -704,6 +704,10 @@ class GlomexDialogElement extends window.HTMLElement {
       this.refreshDockDialog();
     }
 
+    if (name === 'dock-mode') {
+      this.refreshDockDialog();
+    }
+
     if (name === 'aspect-ratio') {
       updatePlaceholderAspectRatio(this, getAspectRatioFromStrings([
         this.getAttribute('aspect-ratio'),

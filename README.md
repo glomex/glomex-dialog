@@ -529,9 +529,11 @@ export default () => {
   const dialog = useRef();
   const dockMode = useRef();
   const onButtonClick = () => {
-    dialog.current.setAttribute('dock-mode', dockMode.current.value);
     dialog.current.setAttribute('mode', select.current.value);
   };
+  const onDockModeChange = () => {
+    dialog.current.setAttribute('dock-mode', dockMode.current.value);
+  }
 
   let onceVisible = false;
   let currentIntersectionRatio;
@@ -539,7 +541,6 @@ export default () => {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       const glomexDialog = dialog.current;
-      glomexDialog.setAttribute('dock-mode', dockMode.current.value);
       currentIntersectionRatio = entries[0].intersectionRatio;
       if (!onceVisible) {
         onceVisible = entries[0].intersectionRatio === 1;
@@ -584,14 +585,14 @@ export default () => {
   </label>
   <label style="margin-left:1em;" >
     Dock-Mode
-    <select style="margin-left:1em;" ref=${dockMode}>
+    <select onChange="${onDockModeChange}" style="margin-left:1em;" ref=${dockMode}>
       <option value="">none</option>
       <option value="sticky" selected>sticky</option>
     </select>
   </label>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
-  <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="48px 10px auto auto" dock-sticky-target-top="48">
+  <glomex-dialog ref=${dialog} mode="inline" dock-mode="sticky" dock-target-inset="48px 10px auto auto" dock-sticky-target-top="48">
   <div slot="dialog-element">
     <div style="position: relative;">
       <div class="placeholder-16x9"></div>

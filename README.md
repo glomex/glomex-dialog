@@ -66,7 +66,6 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
     <option value="custom-value">custom-value</option>
   </select>
@@ -120,7 +119,6 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -180,7 +178,6 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -228,8 +225,6 @@ export default () => {
     <option value="hidden" selected>hidden</option>
     <option value="inline">inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -286,8 +281,6 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -389,7 +382,6 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -482,7 +474,6 @@ export default () => {
     <option value="hidden">hidden</option>
     <option value="inline" selected>inline</option>
     <option value="dock">dock</option>
-    <option value="sticky">sticky</option>
     <option value="lightbox">lightbox</option>
   </select>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
@@ -526,9 +517,9 @@ export default () => {
 </glomex-dialog>
 ~~~
 
-### With IntersectionObserver and custom position
+### With IntersectionObserver and dock-mode = sticky
 
-This example auto docks the video element when the player gets scrolled out of view.
+This example auto docks the video element when the player gets scrolled out of view (similar to `position: sticky`).
 
 ```js preact
 import { html, render, useRef, useEffect } from 'docup'
@@ -536,7 +527,9 @@ import { html, render, useRef, useEffect } from 'docup'
 export default () => {
   const select = useRef();
   const dialog = useRef();
+  const dockMode = useRef();
   const onButtonClick = () => {
+    dialog.current.setAttribute('dock-mode', dockMode.current.value);
     dialog.current.setAttribute('mode', select.current.value);
   };
 
@@ -546,25 +539,26 @@ export default () => {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       const glomexDialog = dialog.current;
+      glomexDialog.setAttribute('dock-mode', dockMode.current.value);
       currentIntersectionRatio = entries[0].intersectionRatio;
       if (!onceVisible) {
         onceVisible = entries[0].intersectionRatio === 1;
         return;
       }
       const currentMode = glomexDialog.getAttribute('mode');
-      const dockMode = select.current.value === 'sticky' ? 'sticky' : 'dock';
       if (currentMode === 'lightbox' || !currentMode) {
         return;
       }
       if (entries[0].intersectionRatio < 1 && (
-        currentMode !== dockMode
+        currentMode !== 'dock'
       )) {
-        glomexDialog.setAttribute('mode', dockMode);
+        glomexDialog.setAttribute('mode', 'dock');
       } else if (entries[0].intersectionRatio === 1) {
         glomexDialog.setAttribute('mode', 'inline');
       }
     }, {
-      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+      rootMargin: '-48px 0px 0px 0px'
     });
     if (dialog.current) {
       observer.observe(dialog.current);
@@ -578,16 +572,26 @@ export default () => {
 
   return html`
   <p>
-  <select ref=${select}>
-    <option value="hidden">hidden</option>
-    <option value="inline">inline</option>
-    <option value="dock" selected>dock</option>
-    <option value="sticky">sticky</option>
-    <option value="lightbox">lightbox</option>
-  </select>
+  <label>
+    Mode
+    <select style="margin-left:1em;" ref=${select}>
+      <option value="hidden">hidden</option>
+      <option value="inline">inline</option>
+      <option value="dock" selected>dock</option>
+      <option value="sticky">sticky</option>
+      <option value="lightbox">lightbox</option>
+    </select>
+  </label>
+  <label style="margin-left:1em;" >
+    Dock-Mode
+    <select style="margin-left:1em;" ref=${dockMode}>
+      <option value="">none</option>
+      <option value="sticky" selected>sticky</option>
+    </select>
+  </label>
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
-  <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="48px 10px auto auto">
+  <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="48px 10px auto auto" dock-sticky-target-top="48">
   <div slot="dialog-element">
     <div style="position: relative;">
       <div class="placeholder-16x9"></div>
@@ -608,7 +612,12 @@ export default () => {
 
 ~~~html
 <!-- The intersection-observer-code is custom in the above example -->
-<glomex-dialog mode="inline" dock-target-inset="50px 10px auto auto">
+<glomex-dialog
+  mode="inline"
+  dock-target-inset="50px 10px auto auto"
+  dock-mode="sticky"
+  dock-sticky-target-top="48"
+>
   <!-- ... -->
 </glomex-dialog>
 ~~~

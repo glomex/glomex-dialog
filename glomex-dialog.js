@@ -207,14 +207,17 @@ function isInDocument(element, document) {
  * putting it in a lightbox. It allows implementing a similar
  * feature as amp-video-docking but without using AMP.
  *
- * @attr {string} mode - Can take the values "hidden", "inline", "dock", "lightbox" or "sticky"
+ * @attr {string} mode - Can take the values "hidden", "inline", "dock" or "lightbox".
  * @attr {string} aspect-ratio - The aspect-ratio for the inline element. Default is 16:9
  * @attr {string} dock-target - A dom-element with position:fixed where mode=dock should animate to
  * @attr {string} dock-target-inset - Allows positions the dock target (which corner to dock to)
  * @attr {string} dock-aspect-ratio - The aspect-ratio when the element is mode=dock
- * @attr {string} dock-sticky-target-top - The top distance for mode=sticky in pixels
+ * @attr {string} dock-mode - When set to "sticky" it behaves similar to "position: sticky" in CSS
+ *   (with a max width of 400px). If undefined docks the content to a corner.
+ * @attr {string} dock-sticky-target-top - The top distance for dock-mode=sticky in pixels
  *   (defaults to 0)
- * @attr {string} dock-sticky-aspect-ratio - The aspect-ratio when the element is mode=sticky
+ * @attr {string} dock-sticky-aspect-ratio - The aspect-ratio when the element is docked
+ *   for dock-mode=sticky
  * @attr {string} dock-downscale - Do you want to scale the element when mode=dock
  */
 class GlomexDialogElement extends window.HTMLElement {
@@ -312,13 +315,12 @@ class GlomexDialogElement extends window.HTMLElement {
       opacity: 0;
     }
 
-    :host([mode=dock]) .dialog-content,
-    :host([mode=sticky]) .dialog-content {
+    :host([mode=dock]) .dialog-content {
       position: absolute;
     }
 
     :host([alternative-dock-target]) .drag-handle,
-    :host([mode=sticky]) .drag-handle {
+    :host([dock-mode=sticky]) .drag-handle {
       display: none;
     }
 
@@ -350,8 +352,7 @@ class GlomexDialogElement extends window.HTMLElement {
       touch-action: none;
     }
 
-    :host([mode=dock]) .dialog-content ::slotted([slot=dock-overlay]),
-    :host([mode=sticky]) .dialog-content ::slotted([slot=dock-overlay]) {
+    :host([mode=dock]) .dialog-content ::slotted([slot=dock-overlay]) {
       display: block;
     }
 
@@ -539,6 +540,7 @@ class GlomexDialogElement extends window.HTMLElement {
       'dock-target',
       'dock-target-inset',
       'dock-aspect-ratio',
+      'dock-mode',
       'dock-sticky-target-top',
       'dock-sticky-aspect-ratio',
       'dock-downscale',
@@ -546,16 +548,23 @@ class GlomexDialogElement extends window.HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    let moveTo;
-    let aspectRatios;
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     const placeholder = this.shadowRoot.querySelector('.placeholder');
+    const dockMode = this.getAttribute('dock-mode');
     const transitionDuration = DEFAULT_TRANSITION_DURATION;
+    const aspectRatios = [
+      dockMode === 'sticky'
+        ? this.getAttribute('dock-sticky-aspect-ratio')
+        : this.getAttribute('dock-aspect-ratio'),
+      this.getAttribute('aspect-ratio'),
+    ];
+    const moveTo = dockMode === 'sticky'
+      ? getDockStickyTarget(this)
+      : getAlternativeDockTarget(this) || getDefaultDockTarget(this);
     if (name === 'mode') {
       if (this._wasInHiddenMode && (
         newValue === 'lightbox'
         || newValue === 'dock'
-        || newValue === 'sticky'
       )) {
         placeholder.style.display = 'none';
       } else {
@@ -565,17 +574,7 @@ class GlomexDialogElement extends window.HTMLElement {
         passive: false,
       });
 
-      if (newValue === 'dock' || newValue === 'sticky') {
-        aspectRatios = [
-          newValue === 'sticky'
-            ? this.getAttribute('dock-sticky-aspect-ratio')
-            : this.getAttribute('dock-aspect-ratio'),
-          this.getAttribute('aspect-ratio'),
-        ];
-        this.parentElement.removeAttribute('modal');
-        moveTo = newValue === 'dock'
-          ? getAlternativeDockTarget(this) || getDefaultDockTarget(this)
-          : getDockStickyTarget(this);
+      if (newValue === 'dock') {
         dialogContent.style.zIndex = DOCK_Z_INDEX;
         updateDockTargetState(this);
         moveFromTo(dialogContent, {
@@ -610,7 +609,7 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogContent.firstElementChild.style.width = null;
           dialogContent.style.top = null;
           dialogContent.style.left = null;
-          if (!this._wasInHiddenMode && (oldValue === 'dock' || oldValue === 'sticky')) {
+          if (!this._wasInHiddenMode && oldValue === 'dock') {
             dialogContent.style.transitionDuration = `${transitionDuration}ms`;
             dialogContent.firstElementChild.style.transitionDuration = `${transitionDuration}ms`;
             dialogContent.style.transitionTimingFunction = 'ease-out';
@@ -622,16 +621,7 @@ class GlomexDialogElement extends window.HTMLElement {
             }
           }, transitionDuration);
         };
-        if (oldValue === 'dock' || oldValue === 'sticky') {
-          aspectRatios = [
-            newValue === 'sticky'
-              ? this.getAttribute('dock-sticky-aspect-ratio')
-              : this.getAttribute('dock-aspect-ratio'),
-            this.getAttribute('aspect-ratio'),
-          ];
-          moveTo = oldValue === 'dock'
-            ? getAlternativeDockTarget(this) || getDefaultDockTarget(this)
-            : getDockStickyTarget(this);
+        if (oldValue === 'dock') {
           // reposition element without animation
           // so that new position with scroll gets calculated
           moveFromTo(dialogContent, {
@@ -752,9 +742,16 @@ class GlomexDialogElement extends window.HTMLElement {
     const dockStickyTarget = this.shadowRoot.querySelector('.dock-sticky-target');
     const clientRect = this.getBoundingClientRect();
     const mode = this.getAttribute('mode');
-    const moveTo = mode === 'dock'
-      ? getAlternativeDockTarget(this) || getDefaultDockTarget(this)
-      : getDockStickyTarget(this);
+    const dockMode = this.getAttribute('dock-mode');
+    const aspectRatios = [
+      dockMode === 'sticky'
+        ? this.getAttribute('dock-sticky-aspect-ratio')
+        : this.getAttribute('dock-aspect-ratio'),
+      this.getAttribute('aspect-ratio'),
+    ];
+    const moveTo = dockMode === 'sticky'
+      ? getDockStickyTarget(this)
+      : getAlternativeDockTarget(this) || getDefaultDockTarget(this);
 
     let stickyWidth = clientRect.width;
     if (stickyWidth >= MAX_DOCK_WIDTH) {
@@ -764,14 +761,7 @@ class GlomexDialogElement extends window.HTMLElement {
     dockStickyTarget.style.width = `${stickyWidth}px`;
     dockStickyTarget.style.height = `${clientRect.height * (stickyWidth / clientRect.width)}px`;
 
-    const aspectRatios = [
-      this.getAttribute('mode') === 'sticky'
-        ? this.getAttribute('dock-sticky-aspect-ratio')
-        : this.getAttribute('dock-aspect-ratio'),
-      this.getAttribute('aspect-ratio'),
-    ];
-
-    if (mode === 'dock' || mode === 'sticky') {
+    if (mode === 'dock') {
       updateDockTargetState(this);
       moveFromTo(dialogContent, {
         from: this.shadowRoot.querySelector('.placeholder'),

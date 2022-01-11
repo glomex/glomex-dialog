@@ -279,15 +279,17 @@ class GlomexDialogElement extends window.HTMLElement {
       display: block;
       position: absolute;
       top: 0;
-      right: 0;
-      bottom: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
       will-change: transform, transition, width, height, top, left, opacity;
     }
 
     .dialog-inverse-scale-element {
       width: 100%;
       max-height: 100%;
+      max-width: 100%;
       will-change: transform, width, height;
       transform-origin: top left;
     }

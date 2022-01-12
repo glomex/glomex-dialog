@@ -58,7 +58,7 @@
               "type": {
                 "text": "string"
               },
-              "description": "Allows positions the dock target (which corner to dock to)"
+              "description": "Defines the position of the dock using inset"
             },
             {
               "name": "dock-aspect-ratio",

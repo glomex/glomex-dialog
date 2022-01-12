@@ -210,7 +210,7 @@ function isInDocument(element, document) {
  * @attr {string} mode - Can take the values "hidden", "inline", "dock" or "lightbox".
  * @attr {string} aspect-ratio - The aspect-ratio for the inline element. Default is 16:9
  * @attr {string} dock-target - A dom-element with position:fixed where mode=dock should animate to
- * @attr {string} dock-target-inset - Allows positions the dock target (which corner to dock to)
+ * @attr {string} dock-target-inset - Defines the position of the dock using inset
  * @attr {string} dock-aspect-ratio - The aspect-ratio when the element is mode=dock
  * @attr {string} dock-mode - When set to "sticky" it behaves similar to "position: sticky" in CSS
  *   (with a max width of 400px). If undefined docks the content to a corner.

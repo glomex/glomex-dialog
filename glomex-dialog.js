@@ -753,6 +753,9 @@ class GlomexDialogElement extends window.HTMLElement {
       : getAlternativeDockTarget(this) || getDefaultDockTarget(this);
 
     let stickyWidth = clientRect.width;
+    if (stickyWidth === 0) {
+      stickyWidth = window.innerWidth * 0.9;
+    }
     if (stickyWidth >= MAX_DOCK_WIDTH) {
       stickyWidth = MAX_DOCK_WIDTH;
     }

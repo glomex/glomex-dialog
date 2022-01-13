@@ -33,22 +33,67 @@
           ],
           "attributes": [
             {
-              "name": "mode"
+              "name": "mode",
+              "type": {
+                "text": "string"
+              },
+              "description": "Can take the values \"hidden\", \"inline\", \"dock\" or \"lightbox\"."
             },
             {
-              "name": "aspect-ratio"
+              "name": "aspect-ratio",
+              "type": {
+                "text": "string"
+              },
+              "description": "The aspect-ratio for the inline element. Default is 16:9"
             },
             {
-              "name": "dock-target"
+              "name": "dock-target",
+              "type": {
+                "text": "string"
+              },
+              "description": "A dom-element with position:fixed where mode=dock should animate to"
             },
             {
-              "name": "dock-target-inset"
+              "name": "dock-target-inset",
+              "type": {
+                "text": "string"
+              },
+              "description": "Defines the position of the dock using inset"
             },
             {
-              "name": "dock-aspect-ratio"
+              "name": "dock-aspect-ratio",
+              "type": {
+                "text": "string"
+              },
+              "description": "The aspect-ratio when the element is mode=dock"
             },
             {
-              "name": "dock-downscale"
+              "name": "dock-mode",
+              "type": {
+                "text": "string"
+              },
+              "description": "When set to \"sticky\" it behaves similar to \"position: sticky\" in CSS (with a max width of 400px). If undefined docks the content to a corner."
+            },
+            {
+              "name": "dock-sticky-target-top",
+              "type": {
+                "text": "string"
+              },
+              "description": "The top distance for dock-mode=sticky in pixels (defaults to 0)"
+            },
+            {
+              "name": "dock-sticky-aspect-ratio",
+              "type": {
+                "text": "string"
+              },
+              "description": "The aspect-ratio when the element is docked for dock-mode=sticky"
+            },
+            {
+              "name": "dock-downscale",
+              "type": {
+                "text": "string"
+              },
+              "description": "Do you want to scale the element when mode=dock"
             }
           ],
           "superclass": {

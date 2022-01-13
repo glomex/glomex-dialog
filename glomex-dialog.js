@@ -85,41 +85,36 @@ const moveFromTo = (element, {
   element.style.width = `${width}px`;
   element.style.height = `${height}px`;
   element.style.transform = 'scale(1)';
-  element.firstElementChild.style.transform = 'scale(1)';
-
-  if (navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1) {
-    // somehow safari animates to the wrong position initially
-    // and then snaps into place when the aspect-ratio is not stable
-    element.style.minHeight = `${toHeight}px`;
-  }
-
   element.style.top = `${fromRect.top + visualViewport.offsetTop}px`;
   element.style.left = `${fromRect.left + visualViewport.offsetLeft}px`;
+  // avoid CLS further
+  element.style.display = 'grid';
 
   const deltaX = toRect.left - fromRect.left;
   const deltaY = toRect.top - fromRect.top;
   const deltaScale = toRect.width / width;
 
   const moveDialog = () => {
+    // avoid CLS (see setting to "display: grid" before requestAnimationFrame)
+    element.style.display = null;
     element.style.height = `${toHeight}px`;
     element.style.transform = `translate(${(deltaX / width) * 100}%, ${(deltaY / toHeight) * 100}%) scale(${deltaScale})`;
-    element.style.transitionProperty = 'transform, opacity, height';
+    element.style.transitionProperty = 'transform';
     element.style.transformOrigin = 'top left';
     element.style.transitionTimingFunction = 'ease-out';
-    if (!downscale) {
-      element.firstElementChild.style.width = `${toRect.width}px`;
-      element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
-      element.firstElementChild.style.transitionProperty = 'scale';
-      element.firstElementChild.style.transformOrigin = 'top left';
-      element.firstElementChild.style.transitionTimingFunction = 'ease-out';
-    }
     if (animate) {
       element.style.transitionDuration = `${transitionDuration}ms`;
-      element.firstElementChild.style.transitionDuration = `${transitionDuration}ms`;
     } else {
       element.style.transitionDuration = null;
-      element.firstElementChild.style.transitionDuration = null;
-      element.firstElementChild.style.transitionDelay = null;
+    }
+    if (!downscale) {
+      // avoid as best as possible that the contained element is shortly scaled too large
+      // somehow width+scale is not applied at the same time when the motion is too fast
+      element.firstElementChild.style.transitionDuration = '0s';
+      element.firstElementChild.style.transitionProperty = 'transform';
+      element.firstElementChild.style.width = `${toRect.width}px`;
+      element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
+      element.firstElementChild.style.transformOrigin = 'top left';
     }
   };
 
@@ -288,10 +283,8 @@ class GlomexDialogElement extends window.HTMLElement {
 
     .dialog-inverse-scale-element {
       width: 100%;
-      max-height: 100%;
       max-width: 100%;
-      will-change: transform, width, height;
-      transform-origin: top left;
+      will-change: transition, transform, width;
     }
 
     /*
@@ -607,13 +600,13 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogContent.style.display = 'grid';
           dialogContent.style.position = 'absolute';
           dialogContent.style.transform = 'scale(1)';
-          dialogContent.firstElementChild.style.transform = 'scale(1)';
+          dialogContent.firstElementChild.style.transform = null;
           dialogContent.firstElementChild.style.width = null;
           dialogContent.style.top = null;
           dialogContent.style.left = null;
           if (!this._wasInHiddenMode && oldValue === 'dock') {
             dialogContent.style.transitionDuration = `${transitionDuration}ms`;
-            dialogContent.firstElementChild.style.transitionDuration = `${transitionDuration}ms`;
+            dialogContent.firstElementChild.style.transitionDuration = null;
             dialogContent.style.transitionTimingFunction = 'ease-out';
           }
           setTimeout(() => {

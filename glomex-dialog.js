@@ -282,6 +282,9 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     .dialog-inverse-scale-element {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       max-width: 100%;
       will-change: transition, transform, width;

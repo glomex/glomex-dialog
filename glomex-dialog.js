@@ -400,9 +400,9 @@ class GlomexDialogElement extends window.HTMLElement {
       }
 
       :host([mode=lightbox]) .dialog-inner-wrapper {
-        height: 100%;
-        width: 100%;
-        margin: 0 auto;
+        height: 100% !important;
+        width: 100% !important;
+        margin: 0 auto !important;
       }
 
       :host([mode=lightbox]):before {

@@ -80,6 +80,7 @@ const moveFromTo = (element, {
     ? (NON_VISIBLE_WIDTH / initialAspectRatio)
     : fromRect.height;
   const toHeight = width / aspectRatio;
+  const elementInnerContainer = element.firstElementChild;
 
   element.style.position = 'fixed';
   element.style.width = `${width}px`;
@@ -110,11 +111,11 @@ const moveFromTo = (element, {
     if (!downscale) {
       // avoid as best as possible that the contained element is shortly scaled too large
       // somehow width+scale is not applied at the same time when the motion is too fast
-      element.firstElementChild.style.transitionDuration = '0s';
-      element.firstElementChild.style.transitionProperty = 'transform';
-      element.firstElementChild.style.width = `${toRect.width}px`;
-      element.firstElementChild.style.transform = `scale(${1 / deltaScale})`;
-      element.firstElementChild.style.transformOrigin = 'top left';
+      elementInnerContainer.style.transitionDuration = '0s';
+      elementInnerContainer.style.transitionProperty = 'transform';
+      elementInnerContainer.style.width = `${toRect.width}px`;
+      elementInnerContainer.style.transform = `scale(${1 / deltaScale})`;
+      elementInnerContainer.style.transformOrigin = 'top left';
     }
   };
 
@@ -281,7 +282,7 @@ class GlomexDialogElement extends window.HTMLElement {
       will-change: transform, transition, width, height, top, left, opacity;
     }
 
-    .dialog-inverse-scale-element {
+    .dialog-inner-wrapper {
       position: absolute;
       top: 0;
       left: 0;
@@ -295,7 +296,7 @@ class GlomexDialogElement extends window.HTMLElement {
        "will-change: transform" lets external elements shine through
     */
     .dialog-content:-webkit-full-screen-ancestor:not(iframe),
-    .dialog-inverse-scale-element:-webkit-full-screen-ancestor:not(iframe) {
+    .dialog-inner-wrapper:-webkit-full-screen-ancestor:not(iframe) {
       will-change: auto;
     }
 
@@ -363,14 +364,22 @@ class GlomexDialogElement extends window.HTMLElement {
       animation-duration: 200ms;
       animation-timing-function: ease-in;
       position: fixed;
-      margin: 5vh auto;
       top: 0;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
       z-index: ${LIGHTBOX_Z_INDEX};
-      max-height: 28vh;
-      max-width: 95vw;
-      width: 1200px;
+      overflow: auto;
+    }
+
+    :host([mode=lightbox]) .dialog-inner-wrapper {
+      max-width: 80%;
+      margin: 5vh auto 0 auto;
+      position: relative;
+    }
+
+    @media (max-width: 1024px) {
+      :host([mode=lightbox]) .dialog-inner-wrapper {
+        max-width: 95%;
+      }
     }
 
     :host([mode=lightbox]):before {
@@ -388,10 +397,9 @@ class GlomexDialogElement extends window.HTMLElement {
     @media (hover: none) and (pointer: coarse) and (orientation: landscape) {
       :host([mode=lightbox]) .dialog-content {
         animation-name: none;
-        margin: 0;
-        top: 0;
-        left: 0;
-        transform: none;
+      }
+
+      :host([mode=lightbox]) .dialog-inner-wrapper {
         height: 100%;
         width: 100%;
         margin: 0 auto;
@@ -423,7 +431,7 @@ class GlomexDialogElement extends window.HTMLElement {
       <div class="aspect-ratio-box"></div>
     </div>
     <div class="dialog-content" part="dialog-content">
-      <div class="dialog-inverse-scale-element">
+      <div class="dialog-inner-wrapper">
         <slot name="dialog-element"></slot>
         <slot name="dock-overlay">
           <div class="drag-handle">
@@ -514,8 +522,8 @@ class GlomexDialogElement extends window.HTMLElement {
       if (event.key === 'Tab') {
         const activeElement = getActiveElement(window.document);
         if (activeElement !== this && !isInDocument(activeElement, this)) {
-          const dialogContent = this.shadowRoot.querySelector('.dialog-content');
-          dialogContent.focus();
+          const dialogInnerWrapper = this.shadowRoot.querySelector('.dialog-inner-wrapper');
+          dialogInnerWrapper.focus();
         }
       }
     };
@@ -547,6 +555,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
+    const dialogInnerWrapper = dialogContent.querySelector('.dialog-inner-wrapper');
     const placeholder = this.shadowRoot.querySelector('.placeholder');
     const dockMode = this.getAttribute('dock-mode');
     const transitionDuration = DEFAULT_TRANSITION_DURATION;
@@ -603,19 +612,19 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogContent.style.display = 'grid';
           dialogContent.style.position = 'absolute';
           dialogContent.style.transform = 'scale(1)';
-          dialogContent.firstElementChild.style.transform = null;
-          dialogContent.firstElementChild.style.width = null;
+          dialogInnerWrapper.style.transform = null;
+          dialogInnerWrapper.style.width = null;
           dialogContent.style.top = null;
           dialogContent.style.left = null;
           if (!this._wasInHiddenMode && oldValue === 'dock') {
             dialogContent.style.transitionDuration = `${transitionDuration}ms`;
-            dialogContent.firstElementChild.style.transitionDuration = null;
+            dialogInnerWrapper.style.transitionDuration = null;
             dialogContent.style.transitionTimingFunction = 'ease-out';
           }
           setTimeout(() => {
             if (this.getAttribute('mode') === 'inline') {
               dialogContent.setAttribute('style', '');
-              dialogContent.firstElementChild.setAttribute('style', '');
+              dialogInnerWrapper.setAttribute('style', '');
             }
           }, transitionDuration);
         };
@@ -646,10 +655,9 @@ class GlomexDialogElement extends window.HTMLElement {
         window.document.body.style.height = '100%';
         window.document.body.style.overflow = 'hidden';
         dialogContent.setAttribute('style', '');
-        dialogContent.firstElementChild.setAttribute('style', '');
-        // TODO: rethink focus-handling?
-        dialogContent.setAttribute('tabindex', '-1');
-        dialogContent.focus();
+        dialogInnerWrapper.setAttribute('style', '');
+        dialogInnerWrapper.setAttribute('tabindex', '-1');
+        dialogInnerWrapper.focus();
         // prevent document scrolling on iOS
         this._onNonPassiveTouchMove = (event) => {
           event.preventDefault();
@@ -665,7 +673,7 @@ class GlomexDialogElement extends window.HTMLElement {
         // reset prevent scrolling
         window.document.body.style.height = null;
         window.document.body.style.overflow = null;
-        dialogContent.removeAttribute('tabindex');
+        dialogInnerWrapper.removeAttribute('tabindex');
       }
 
       this.dispatchEvent(
@@ -728,7 +736,7 @@ class GlomexDialogElement extends window.HTMLElement {
     }
     if (name === 'dock-downscale' && newValue) {
       if (newValue) {
-        dialogContent.firstElementChild.setAttribute('style', '');
+        dialogInnerWrapper.setAttribute('style', '');
       } else {
         // No implementation when dock-downscale gets reset
       }

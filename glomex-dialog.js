@@ -198,6 +198,18 @@ function isInDocument(element, document) {
   return false;
 }
 
+function adjustLightboxModeForLandscapeOnMobile(element) {
+  if (element.getAttribute('mode') !== 'lightbox') return;
+  const mobileLandscapeSelector = '(max-device-width: 450px) and (hover: none) and (pointer: coarse) and (orientation: landscape)';
+  if (window.matchMedia(mobileLandscapeSelector).matches) {
+    // allow scrolling in mobile landscape
+    // so that the user can scroll down to remove the browser bar
+    window.document.body.style.overflow = null;
+  } else {
+    window.document.body.style.overflow = 'hidden';
+  }
+}
+
 /**
  * A dialog web component that allows docking a video player or
  * putting it in a lightbox. It allows implementing a similar
@@ -394,15 +406,18 @@ class GlomexDialogElement extends window.HTMLElement {
       z-index: ${LIGHTBOX_Z_INDEX};
     }
 
-    @media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+    @media (hover: none) and (max-device-width: 450px) and (pointer: coarse) and (orientation: landscape) {
       :host([mode=lightbox]) .dialog-content {
         animation-name: none;
+        height: 100%;
+        width: 100%;
       }
 
       :host([mode=lightbox]) .dialog-inner-wrapper {
         height: 100% !important;
-        width: 100% !important;
+        max-width: 100% !important;
         margin: 0 auto !important;
+        min-height: -webkit-fill-available !important;
       }
 
       :host([mode=lightbox]):before {
@@ -484,20 +499,8 @@ class GlomexDialogElement extends window.HTMLElement {
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
     this._disconnectDragAndDrop = connectDragAndDrop(this);
 
-    const adjustLightboxModeForLandscapeOnMobile = () => {
-      if (this.getAttribute('mode') !== 'lightbox') return;
-      const mobileLandscapeSelector = '(hover: none) and (pointer: coarse) and (orientation: landscape)';
-      if (window.matchMedia(mobileLandscapeSelector).matches) {
-        // allow scrolling in mobile landscape
-        // so that the user can scroll down to remove the browser bar
-        window.document.body.style.overflow = null;
-      } else {
-        window.document.body.style.overflow = 'hidden';
-      }
-    };
-
     const onResize = () => {
-      adjustLightboxModeForLandscapeOnMobile();
+      adjustLightboxModeForLandscapeOnMobile(this);
       updateViewPortWidth(this);
       this.refreshDockDialog();
     };
@@ -665,6 +668,7 @@ class GlomexDialogElement extends window.HTMLElement {
         window.addEventListener('touchmove', this._onNonPassiveTouchMove, {
           passive: false,
         });
+        adjustLightboxModeForLandscapeOnMobile(this);
       } else if (newValue === 'hidden') {
         this._wasInHiddenMode = true;
       }

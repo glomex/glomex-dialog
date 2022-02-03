@@ -1,7 +1,12 @@
+// when bundled for IE window.EventTarget could be undefined
+// and extending "RotateToFullscreen" with "undefined" would lead to
+// a failing bundled file
+const EventTarget = window.EventTarget || Object;
+
 /**
  * Handles <glomex-dialog rotate-to-fullscreen>
  */
-export class RotataToFullscreen extends window.EventTarget {
+export class RotataToFullscreen extends EventTarget {
   constructor(window, fullscreenElement) {
     super();
     this._element = fullscreenElement;
@@ -34,6 +39,14 @@ export class RotataToFullscreen extends window.EventTarget {
 
     if (this._rootNode.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
+      // "fullscreenchange" is emitted async
+      // ensure to send out an early exit here so that the consumer
+      // can update on his own
+      this.dispatchEvent(new window.CustomEvent('exit', {
+        detail: {
+          orientation: screen.orientation.type
+        }
+      }));
     }
 
     screen.orientation.removeEventListener('change', this._onOrientationChange);
@@ -58,13 +71,13 @@ export class RotataToFullscreen extends window.EventTarget {
     const { screen } = this._window;
 
     if (this._rootNode.fullscreenElement === null) {
-      this.dispatchEvent(new CustomEvent('exit', {
+      this.dispatchEvent(new window.CustomEvent('exit', {
         detail: {
           orientation: screen.orientation.type
         }
       }));
     } else {
-      this.dispatchEvent(new CustomEvent('enter'));
+      this.dispatchEvent(new window.CustomEvent('enter'));
     }
   }
 }

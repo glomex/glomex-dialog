@@ -255,6 +255,64 @@ export default () => {
 </glomex-dialog>
 ~~~
 
+### Using rotate-to-fullscreen
+
+You can enable this setting, so that the dialog goes into fullscreen on mobile phones (up until 480px width) when rotated to landscape in lightbox mode.
+
+```js preact
+import { html, render, useRef } from 'docup'
+
+export default () => {
+  const select = useRef();
+  const dialog = useRef();
+  const onButtonClick = () => {
+    dialog.current.setAttribute('mode', select.current.value);
+  };
+
+  return html`
+  <p>
+  <select ref=${select}>
+    <option value="hidden">hidden</option>
+    <option value="inline">inline</option>
+    <option value="dock">dock</option>
+    <option value="lightbox" selected>lightbox</option>
+  </select>
+  <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
+  </p>
+  <style>
+    glomex-dialog[mode="lightbox"][fullscreen] video {
+      height: 100vh;
+      min-height: 100%;
+    }
+    glomex-dialog[mode="lightbox"][fullscreen] .placeholder-16x9 {
+      padding-top: unset;
+    }
+  </style>
+  <glomex-dialog id="with-rotate-to-fullscreen" mode="inline" ref=${dialog} rotate-to-fullscreen>
+  <div slot="dialog-element">
+    <div style="position: relative;">
+      <div class="placeholder-16x9"></div>
+      <video
+        class="video-element"
+        controls
+        playsinline
+        webkit-playsinline
+        preload="none"
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
+      </video>
+    </div>
+  </div>
+  </glomex-dialog>`
+}
+```
+
+~~~html
+<glomex-dialog rotate-to-fullscreen>
+  <!-- ... -->
+</glomex-dialog>
+~~~
+
 ### With custom placeholder
 
 ```js preact

@@ -1,3 +1,5 @@
+import { RotataToFullscreen } from './rotate-to-fullscreen.js';
+
 const NON_VISIBLE_WIDTH = window.innerWidth < 720 ? 320 : 640;
 const DEFAULT_DOCK_TARGET_INSET = '0px 10px auto auto';
 const DEFAULT_TRANSITION_DURATION = 300;
@@ -5,6 +7,9 @@ const DOCK_Z_INDEX = 9999999;
 const LIGHTBOX_Z_INDEX = 10000000;
 const MIN_DOCK_WIDTH = 192;
 const MAX_DOCK_WIDTH = 400;
+const PHONE_MAX_WIDTH = 480;
+
+const allowRotateToFullscreen = Math.min(window.innerWidth, window.innerHeight) <= PHONE_MAX_WIDTH;
 
 const updateViewPortWidth = (element) => {
   let viewPortWidth = window.innerWidth * 0.3;
@@ -200,7 +205,7 @@ function isInDocument(element, document) {
 
 function adjustLightboxModeForLandscapeOnMobile(element) {
   if (element.getAttribute('mode') !== 'lightbox') return;
-  const mobileLandscapeSelector = '(max-device-width: 450px) and (hover: none) and (pointer: coarse) and (orientation: landscape)';
+  const mobileLandscapeSelector = `(max-device-width: ${PHONE_MAX_WIDTH}px) and (hover: none) and (pointer: coarse) and (orientation: landscape)`;
   if (window.matchMedia(mobileLandscapeSelector).matches) {
     // allow scrolling in mobile landscape
     // so that the user can scroll down to remove the browser bar
@@ -406,7 +411,7 @@ class GlomexDialogElement extends window.HTMLElement {
       z-index: ${LIGHTBOX_Z_INDEX};
     }
 
-    @media (hover: none) and (max-device-width: 450px) and (pointer: coarse) and (orientation: landscape) {
+    @media (hover: none) and (max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape) {
       :host([mode=lightbox]) .dialog-content {
         animation-name: none;
         height: 100%;
@@ -540,6 +545,12 @@ class GlomexDialogElement extends window.HTMLElement {
     if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
     this._disconnectResize();
     this._disconnectKeyup();
+    if (this._rotateToFullscreen) {
+      this._rotateToFullscreen.disable();
+      this._rotateToFullscreen.removeEventListener('exit', this._onRotateToFullscreenExit);
+      this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
+      this._rotateToFullscreen = undefined;
+    }
   }
 
   static get observedAttributes() {
@@ -553,6 +564,7 @@ class GlomexDialogElement extends window.HTMLElement {
       'dock-sticky-target-top',
       'dock-sticky-aspect-ratio',
       'dock-downscale',
+      'rotate-to-fullscreen',
     ];
   }
 
@@ -669,6 +681,9 @@ class GlomexDialogElement extends window.HTMLElement {
           passive: false,
         });
         adjustLightboxModeForLandscapeOnMobile(this);
+        if (this._rotateToFullscreen) {
+          this._rotateToFullscreen.enable();
+        }
       } else if (newValue === 'hidden') {
         this._wasInHiddenMode = true;
       }
@@ -678,6 +693,10 @@ class GlomexDialogElement extends window.HTMLElement {
         window.document.body.style.height = null;
         window.document.body.style.overflow = null;
         dialogInnerWrapper.removeAttribute('tabindex');
+      }
+
+      if (oldValue === 'lightbox' && this._rotateToFullscreen) {
+        this._rotateToFullscreen.disable();
       }
 
       this.dispatchEvent(
@@ -743,6 +762,32 @@ class GlomexDialogElement extends window.HTMLElement {
         dialogInnerWrapper.setAttribute('style', '');
       } else {
         // No implementation when dock-downscale gets reset
+      }
+    }
+
+    if (name === 'rotate-to-fullscreen') {
+      if (newValue == null && this._rotateToFullscreen) {
+        this._rotateToFullscreen.disable();
+        this._rotateToFullscreen.removeEventListener('exit', this._onRotateToFullscreenExit);
+        this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
+        this._rotateToFullscreen = undefined;
+      } else if (allowRotateToFullscreen) {
+        this._onRotateToFullscreenExit = (event) => {
+          if (event.detail.orientation.indexOf('landscape') === 0) {
+            this._internalModeChange = true;
+            this.setAttribute('mode', this._wasInHiddenMode ? 'hidden' : 'inline');
+          }
+          this.removeAttribute('fullscreen');
+        };
+        this._onRotateToFullscreenEnter = () => {
+          // expose fullscreen to the light-dom so we can apply fullscreen styles there
+          // (device-mode: fullscreen) media queries somehow don't work in combination
+          // with shadow dom
+          this.setAttribute('fullscreen', '');
+        };
+        this._rotateToFullscreen = new RotataToFullscreen(window, dialogInnerWrapper);
+        this._rotateToFullscreen.addEventListener('exit', this._onRotateToFullscreenExit);
+        this._rotateToFullscreen.addEventListener('enter', this._onRotateToFullscreenEnter);
       }
     }
   }

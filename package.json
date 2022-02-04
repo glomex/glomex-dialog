@@ -1,6 +1,6 @@
 {
   "name": "@glomex/glomex-dialog",
-  "version": "1.15.1",
+  "version": "1.15.2",
   "description": "A dialog web component that allows docking a video player or putting it in a lightbox",
   "type": "module",
   "main": "glomex-dialog.js",

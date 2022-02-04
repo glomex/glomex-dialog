@@ -10,7 +10,7 @@
     "start": "serve",
     "create-custom-element-json": "npx @custom-elements-manifest/analyzer analyze --globs glomex-dialog.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "cp README.md index.html.md"
+    "prepare": "cp README.md index.html.md"
   },
   "repository": {
     "type": "git",

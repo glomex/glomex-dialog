@@ -205,7 +205,7 @@ function isInDocument(element, document) {
 
 function adjustLightboxModeForLandscapeOnMobile(element) {
   if (element.getAttribute('mode') !== 'lightbox') return;
-  const mobileLandscapeSelector = `(max-device-width: ${PHONE_MAX_WIDTH}px) and (hover: none) and (pointer: coarse) and (orientation: landscape)`;
+  const mobileLandscapeSelector = `(max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape)`;
   if (window.matchMedia(mobileLandscapeSelector).matches) {
     // allow scrolling in mobile landscape
     // so that the user can scroll down to remove the browser bar
@@ -411,7 +411,7 @@ class GlomexDialogElement extends window.HTMLElement {
       z-index: ${LIGHTBOX_Z_INDEX};
     }
 
-    @media (hover: none) and (max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape) {
+    @media (max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape) {
       :host([mode=lightbox]) .dialog-content {
         animation-name: none;
         height: 100%;

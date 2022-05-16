@@ -547,8 +547,10 @@ class GlomexDialogElement extends window.HTMLElement {
     this._disconnectKeyup();
     if (this._rotateToFullscreen) {
       this._rotateToFullscreen.disable();
-      this._rotateToFullscreen.removeEventListener('exit', this._onRotateToFullscreenExit);
-      this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
+      if (this._rotateToFullscreen.removeEventListener) {
+        this._rotateToFullscreen.removeEventListener('exit', this._onRotateToFullscreenExit);
+        this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
+      }
       this._rotateToFullscreen = undefined;
     }
   }
@@ -786,8 +788,10 @@ class GlomexDialogElement extends window.HTMLElement {
           this.setAttribute('fullscreen', '');
         };
         this._rotateToFullscreen = new RotataToFullscreen(window, dialogInnerWrapper);
-        this._rotateToFullscreen.addEventListener('exit', this._onRotateToFullscreenExit);
-        this._rotateToFullscreen.addEventListener('enter', this._onRotateToFullscreenEnter);
+        if (this._rotateToFullscreen.addEventListener) {
+          this._rotateToFullscreen.addEventListener('exit', this._onRotateToFullscreenExit);
+          this._rotateToFullscreen.addEventListener('enter', this._onRotateToFullscreenEnter);
+        }
       }
     }
   }

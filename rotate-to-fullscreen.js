@@ -1,19 +1,7 @@
 // when bundled for IE window.EventTarget could be undefined
 // and extending "RotateToFullscreen" with "undefined" would lead to
 // a failing bundled file
-
-// only Safari 14 supports using EventTarget constructor
-let supportsEventTargetConstructor = false;
-try {
-  new window.EventTarget();
-  supportsEventTargetConstructor = true;
-} catch(e) {
-  // ignore
-}
-
-const EventTarget = supportsEventTargetConstructor
-  ? window.EventTarget
-  : Object;
+const EventTarget = window.EventTarget || Object;
 
 /**
  * Handles <glomex-dialog rotate-to-fullscreen>

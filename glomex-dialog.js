@@ -547,10 +547,8 @@ class GlomexDialogElement extends window.HTMLElement {
     this._disconnectKeyup();
     if (this._rotateToFullscreen) {
       this._rotateToFullscreen.disable();
-      if (this._rotateToFullscreen.removeEventListener) {
-        this._rotateToFullscreen.removeEventListener('exit', this._onRotateToFullscreenExit);
-        this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
-      }
+      this._rotateToFullscreen.removeEventListener('exit', this._onRotateToFullscreenExit);
+      this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
       this._rotateToFullscreen = undefined;
     }
   }
@@ -787,10 +785,13 @@ class GlomexDialogElement extends window.HTMLElement {
           // with shadow dom
           this.setAttribute('fullscreen', '');
         };
-        this._rotateToFullscreen = new RotataToFullscreen(window, dialogInnerWrapper);
-        if (this._rotateToFullscreen.addEventListener) {
+        try {
+          // iOS < 14 will fail extending EventTarget constructor
+          this._rotateToFullscreen = new RotataToFullscreen(window, dialogInnerWrapper);
           this._rotateToFullscreen.addEventListener('exit', this._onRotateToFullscreenExit);
           this._rotateToFullscreen.addEventListener('enter', this._onRotateToFullscreenEnter);
+        } catch (err) {
+          // ignore
         }
       }
     }

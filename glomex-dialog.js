@@ -9,7 +9,12 @@ const MIN_DOCK_WIDTH = 192;
 const MAX_DOCK_WIDTH = 400;
 const PHONE_MAX_WIDTH = 480;
 
-const allowRotateToFullscreen = Math.min(window.innerWidth, window.innerHeight) <= PHONE_MAX_WIDTH;
+let allowRotateToFullscreen = false;
+if (window.matchMedia(
+  `(max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse)`
+).matches) {
+  allowRotateToFullscreen = true;
+}
 
 const updateViewPortWidth = (element) => {
   let viewPortWidth = window.innerWidth * 0.3;

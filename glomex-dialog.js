@@ -11,7 +11,7 @@ const PHONE_MAX_WIDTH = 480;
 
 let allowRotateToFullscreen = false;
 if (window.matchMedia(
-  `(max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse)`
+  `(max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse)`,
 ).matches) {
   allowRotateToFullscreen = true;
 }
@@ -72,6 +72,7 @@ const getAspectRatioFromStrings = (aspectRatioStrings = []) => {
   return aspectRatioStrings.map((aspectRatio) => {
     if (!aspectRatio) return NaN;
     const ratioSplit = aspectRatio.split(':');
+    if (ratioSplit.length === 1) return Number(aspectRatio);
     return ratioSplit[0] / ratioSplit[1];
   }).filter((aspectRatio) => !!aspectRatio)[0];
 };
@@ -124,6 +125,7 @@ const moveFromTo = (element, {
       elementInnerContainer.style.transitionDuration = '0s';
       elementInnerContainer.style.transitionProperty = 'transform';
       elementInnerContainer.style.width = `${toRect.width}px`;
+      elementInnerContainer.style.height = `${toRect.height}px`;
       elementInnerContainer.style.transform = `scale(${1 / deltaScale})`;
       elementInnerContainer.style.transformOrigin = 'top left';
     }
@@ -334,6 +336,7 @@ class GlomexDialogElement extends window.HTMLElement {
       background-color: rgba(0, 0, 0, 0.7);
       transition: background 300ms ease-in-out, opacity 300ms ease-in-out;
       opacity: 0;
+      z-index: 1;
     }
 
     :host([mode=dock]) .dialog-content {
@@ -365,16 +368,31 @@ class GlomexDialogElement extends window.HTMLElement {
       cursor: move;
     }
 
-    .dialog-content ::slotted([slot=dock-overlay]) {
-      display: none;
+    .dialog-content ::slotted([slot=dock-background]) {
+      visibility: hidden;
     }
 
-    .dialog-content slot[name="dock-overlay"] {
+    .dialog-content slot[name="dock-background"] {
       touch-action: none;
+      cursor: move;
+      position: absolute;
+      display: block;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
 
-    :host([mode=dock]) .dialog-content ::slotted([slot=dock-overlay]) {
+    :host([dock-mode=sticky]) slot[name="dock-background"] {
+      cursor: unset;
+    }
+
+    slot[name=dialog-element] {
       display: block;
+    }
+
+    :host([mode=dock]) .dialog-content ::slotted([slot=dock-background]) {
+      visibility: visible;
     }
 
     :host([mode=dock]) .dialog-content {
@@ -457,17 +475,18 @@ class GlomexDialogElement extends window.HTMLElement {
     </div>
     <div class="dialog-content" part="dialog-content">
       <div class="dialog-inner-wrapper">
-        <slot name="dialog-element"></slot>
-        <slot name="dock-overlay">
+        <slot name="dock-background">
           <div class="drag-handle">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/></svg>
           </div>
         </slot>
+        <slot name="dialog-element"></slot>
       </div>
     </div>`;
     const dockTarget = this.shadowRoot.querySelector('.dock-target');
     const positions = toPositions(DEFAULT_DOCK_TARGET_INSET);
     const dockStickyTarget = this.shadowRoot.querySelector('.dock-sticky-target');
+    const placeholderSlot = this.shadowRoot.querySelector('.placeholder-inner');
     dockStickyTarget.style.top = positions.top;
     Object.assign(dockTarget.style, positions);
 
@@ -477,7 +496,9 @@ class GlomexDialogElement extends window.HTMLElement {
     this.addEventListener('click', ({ target }) => {
       if (this.classList.contains('dragging')) return;
       // allows clicks within GlomexDialog and on a slotted placeholder
-      if (!(target instanceof GlomexDialogElement) && !target.assignedSlot) return;
+      if (!(target instanceof GlomexDialogElement)
+        && target.assignedSlot !== placeholderSlot
+      ) return;
       this._internalModeChange = true;
       if (this._wasInHiddenMode) {
         this.setAttribute('mode', 'hidden');
@@ -740,6 +761,10 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     if (name === 'dock-mode') {
+      if (this._disconnectDragAndDrop) this._disconnectDragAndDrop();
+      if (newValue !== 'sticky') {
+        this._disconnectDragAndDrop = connectDragAndDrop(this);
+      }
       this.refreshDockDialog();
     }
 
@@ -827,12 +852,9 @@ class GlomexDialogElement extends window.HTMLElement {
     if (stickyWidth === 0) {
       stickyWidth = window.innerWidth * 0.9;
     }
-    if (stickyWidth >= MAX_DOCK_WIDTH) {
-      stickyWidth = MAX_DOCK_WIDTH;
-    }
 
     dockStickyTarget.style.width = `${stickyWidth}px`;
-    dockStickyTarget.style.height = `${clientRect.height * (stickyWidth / clientRect.width)}px`;
+    dockStickyTarget.style.height = `${stickyWidth / getAspectRatioFromStrings(aspectRatios)}px`;
 
     if (mode === 'dock') {
       updateDockTargetState(this);
@@ -930,7 +952,7 @@ function connectDragAndDrop(element) {
   let initialX;
   let initialY;
   let dockTargetRect;
-  const dragHandle = element.shadowRoot.querySelector('slot[name=dock-overlay]');
+  const dragHandle = element.shadowRoot.querySelector('slot[name=dock-background]');
   const dockTarget = element.shadowRoot.querySelector('.dock-target');
   const dialogElement = element.shadowRoot.querySelector('slot[name=dialog-element]');
   // overlay for the whole page so that events don't bubble into other iframes

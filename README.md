@@ -28,10 +28,10 @@ Checkout this project, do `npm install`, `npm start` and visit http://localhost:
 -->
 <glomex-dialog mode="inline">
   <!--
-    "dock-overlay" is optional:
+    "dock-background" is optional:
     enables drag'n'drop feature when defined
   -->
-  <div slot="dock-overlay"></div>
+  <div slot="dock-background"></div>
   <div slot="placeholder"></div>
   <div slot="dialog-element">
     <!-- Your HTML that should be docked / put into lightbox -->
@@ -445,7 +445,7 @@ export default () => {
   <button onClick=${onButtonClick} class="button">Switch Dialog Mode</button>
   </p>
   <glomex-dialog ref=${dialog} mode="inline" dock-target-inset="0px auto auto 0px">
-    <div slot="dock-overlay" class="custom-overlay">
+    <div slot="dock-background" class="custom-overlay">
       <div class="controls">
         <button class="play-button" onClick=${onPlayButtonClick}>▶</button>
         <button class="pause-button" onClick=${onPauseButtonClick}>■</button>
@@ -486,8 +486,8 @@ export default () => {
 </style>
 <glomex-dialog mode="inline" dock-target-inset="50px 10px auto auto">
   <!-- when this is defined it automatically makes the element draggable -->
-  <!-- allows to place custom elements in the dock-overlay -->
-  <div slot="dock-overlay" class="custom-overlay">
+  <!-- allows to place custom elements in the dock-background -->
+  <div slot="dock-background" class="custom-overlay">
     <!-- place custom controls here -->
   </div>
   <!-- ... -->

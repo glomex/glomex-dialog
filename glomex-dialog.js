@@ -387,10 +387,6 @@ class GlomexDialogElement extends window.HTMLElement {
       cursor: unset;
     }
 
-    slot[name=dialog-element] {
-      display: block;
-    }
-
     :host([mode=dock]) .dialog-content ::slotted([slot=dock-background]) {
       visibility: visible;
     }

@@ -619,6 +619,8 @@ class GlomexDialogElement extends window.HTMLElement {
       });
 
       if (newValue === 'dock') {
+        // ensure to refresh dock-target states before transition
+        this.refreshDockDialog();
         dialogContent.style.zIndex = DOCK_Z_INDEX;
         updateDockTargetState(this);
         moveFromTo(dialogContent, {

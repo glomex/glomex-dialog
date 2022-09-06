@@ -664,6 +664,7 @@ class GlomexDialogElement extends window.HTMLElement {
             if (this.getAttribute('mode') === 'inline') {
               dialogContent.setAttribute('style', '');
               dialogInnerWrapper.setAttribute('style', '');
+              placeholder.style.display = 'none';
             }
           }, transitionDuration);
         };

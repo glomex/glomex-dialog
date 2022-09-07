@@ -609,10 +609,11 @@ class GlomexDialogElement extends window.HTMLElement {
       if (this._wasInHiddenMode && (
         newValue === 'lightbox'
         || newValue === 'dock'
+        || newValue === 'inline'
       )) {
-        placeholder.style.display = 'none';
+        placeholder.style.visibility = 'hidden';
       } else {
-        placeholder.style.display = null;
+        placeholder.style.visibility = null;
       }
       window.removeEventListener('touchmove', this._onNonPassiveTouchMove, {
         passive: false,
@@ -664,7 +665,7 @@ class GlomexDialogElement extends window.HTMLElement {
             if (this.getAttribute('mode') === 'inline') {
               dialogContent.setAttribute('style', '');
               dialogInnerWrapper.setAttribute('style', '');
-              placeholder.style.display = 'none';
+              placeholder.style.visibility = 'hidden';
             }
           }, transitionDuration);
         };

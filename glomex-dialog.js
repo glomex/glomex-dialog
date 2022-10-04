@@ -312,7 +312,7 @@ class GlomexDialogElement extends window.HTMLElement {
       left: 0;
       width: 100%;
       max-width: 100%;
-      will-change: transition, transform, width;
+      will-change: transition, transform, width, height;
     }
 
     /*

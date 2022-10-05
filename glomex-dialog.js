@@ -683,9 +683,7 @@ class GlomexDialogElement extends window.HTMLElement {
             downscale: this.getAttribute('dock-downscale'),
             transitionDuration,
           }).then(() => {
-            window.requestAnimationFrame(() => {
-              goToInline();
-            });
+            goToInline();
           });
         } else if (oldValue !== 'inline') {
           goToInline();

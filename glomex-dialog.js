@@ -8,6 +8,7 @@ const LIGHTBOX_Z_INDEX = 10000000;
 const MIN_DOCK_WIDTH = 192;
 const MAX_DOCK_WIDTH = 400;
 const PHONE_MAX_WIDTH = 480;
+const STICKY_TOP_SELECTOR_THRESHOLD = 200;
 
 let allowRotateToFullscreen = false;
 if (window.matchMedia(
@@ -43,10 +44,12 @@ const updateDockStickyAspectRatio = (element, aspectRatio) => {
 
 const getAlternativeDockTarget = (element) => {
   const dockTarget = element.getAttribute('dock-target');
-  let dockTargetElement;
+  let dockTargetElements;
   if (dockTarget) {
-    dockTargetElement = document.querySelector(dockTarget);
-    if (!dockTargetElement) return null;
+    dockTargetElements = document.querySelectorAll(dockTarget);
+    if (dockTargetElements.length === 0) return null;
+    // pick the innermost node (querySelectorAll sorts by order in DOM)
+    const dockTargetElement = dockTargetElements[dockTargetElements.length - 1];
     const intersection = getViewportIntersection(dockTargetElement);
     if (intersection && intersection.width > 0 && intersection.height > 0) {
       return dockTargetElement;
@@ -842,6 +845,22 @@ class GlomexDialogElement extends window.HTMLElement {
         : this.getAttribute('dock-aspect-ratio'),
       this.getAttribute('aspect-ratio'),
     ];
+    // adjust the ".dock-sticky-target" top value based on selector
+    if (dockMode === 'sticky') {
+      const alternativeDockTarget = getAlternativeDockTarget(this);
+      if (alternativeDockTarget) {
+        const { height } = getViewportIntersection(alternativeDockTarget);
+        // in case we attach to navigation bars that can be expanded
+        // we ignore to adjust sticky position below a certain threshold
+        // based on given external selector
+        if (height < STICKY_TOP_SELECTOR_THRESHOLD) {
+          // add 5px to have some distance from the top
+          const adjustedHeight = height + 5;
+          dockStickyTarget.style.top = `${adjustedHeight || 0}px`;
+        }
+      }
+    }
+
     const moveTo = dockMode === 'sticky'
       ? getDockStickyTarget(this)
       : getAlternativeDockTarget(this) || getDefaultDockTarget(this);

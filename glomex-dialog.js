@@ -756,8 +756,6 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     if (name === 'dock-sticky-target-top') {
-      this.shadowRoot.querySelector('.dock-sticky-target')
-        .style.top = `${newValue || 0}px`;
       this.refreshDockDialog();
     }
 
@@ -836,6 +834,7 @@ class GlomexDialogElement extends window.HTMLElement {
   refreshDockDialog() {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     const dockStickyTarget = this.shadowRoot.querySelector('.dock-sticky-target');
+    const dockStickyTargetTop = this.getAttribute('dock-sticky-target-top');
     const clientRect = this.getBoundingClientRect();
     const mode = this.getAttribute('mode');
     const dockMode = this.getAttribute('dock-mode');
@@ -845,19 +844,23 @@ class GlomexDialogElement extends window.HTMLElement {
         : this.getAttribute('dock-aspect-ratio'),
       this.getAttribute('aspect-ratio'),
     ];
-    // adjust the ".dock-sticky-target" top value based on selector
     if (dockMode === 'sticky') {
       const alternativeDockTarget = getAlternativeDockTarget(this);
       if (alternativeDockTarget) {
+        // adjust the ".dock-sticky-target" top value based on selector
         const { height } = getViewportIntersection(alternativeDockTarget);
         // in case we attach to navigation bars that can be expanded
         // we ignore to adjust sticky position below a certain threshold
         // based on given external selector
-        if (height < STICKY_TOP_SELECTOR_THRESHOLD) {
-          // add 5px to have some distance from the top
-          const adjustedHeight = height + 5;
-          dockStickyTarget.style.top = `${adjustedHeight || 0}px`;
+        if (height < STICKY_TOP_SELECTOR_THRESHOLD && height > 0) {
+          dockStickyTarget.style.top = `${height || 0}px`;
+        } else {
+          // when not visible adjust to dock-sticky-target-top value
+          dockStickyTarget.style.top = `${dockStickyTargetTop || 0}px`;
         }
+      } else {
+        // when no alternative dock target adjust to dock-sticky-target-top value
+        dockStickyTarget.style.top = `${dockStickyTargetTop || 0}px`;
       }
     }
 

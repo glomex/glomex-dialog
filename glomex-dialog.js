@@ -491,6 +491,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
     this._wasInHiddenMode = false;
     this._internalModeChange = false;
+    this._dockTargetResizeObserver = undefined;
 
     this.addEventListener('click', ({ target }) => {
       if (this.classList.contains('dragging')) return;
@@ -576,6 +577,10 @@ class GlomexDialogElement extends window.HTMLElement {
       this._rotateToFullscreen.removeEventListener('enter', this._onRotateToFullscreenEnter);
       this._rotateToFullscreen = undefined;
     }
+    if (this._dockTargetResizeObserver) {
+      this._dockTargetResizeObserver.disconnect();
+      this._dockTargetResizeObserver = undefined;
+    }
   }
 
   static get observedAttributes() {
@@ -608,6 +613,20 @@ class GlomexDialogElement extends window.HTMLElement {
     const moveTo = dockMode === 'sticky'
       ? getDockStickyTarget(this)
       : getAlternativeDockTarget(this) || getDefaultDockTarget(this);
+    if (name === 'dock-target') {
+      const dockTarget = getAlternativeDockTarget(this);
+      if (!newValue) {
+        if (this._dockTargetResizeObserver) {
+          this._dockTargetResizeObserver.disconnect();
+        }
+      } else if (window.ResizeObserver && dockTarget) {
+        this._dockTargetResizeObserver = new window.ResizeObserver(
+          () => this.refreshDockDialog(),
+        );
+        this._dockTargetResizeObserver.observe(dockTarget);
+      }
+    }
+
     if (name === 'mode') {
       if (this._wasInHiddenMode && (
         newValue === 'lightbox'

@@ -1008,6 +1008,7 @@ function connectDragAndDrop(element) {
   let initialX;
   let initialY;
   let dockTargetRect;
+  let bodyStyleAdjusted = false;
   const dragHandle = element.shadowRoot.querySelector('slot[name=dock-background]');
   const dockTarget = element.shadowRoot.querySelector('.dock-target');
   const dialogElement = element.shadowRoot.querySelector('slot[name=dialog-element]');
@@ -1054,7 +1055,7 @@ function connectDragAndDrop(element) {
     disconnectListeners();
     dialogElement.style.pointerEvents = null;
     // reset scrolling
-    if (this._bodyStyleAdjusted) {
+    if (bodyStyleAdjusted) {
       window.document.body.style.height = null;
       window.document.body.style.overflow = null;
     }
@@ -1076,7 +1077,7 @@ function connectDragAndDrop(element) {
     // prevent scrolling
     window.document.body.style.height = '100%';
     window.document.body.style.overflow = 'hidden';
-    this._bodyStyleAdjusted = true;
+    bodyStyleAdjusted = true;
     // place an overlay above the whole document to
     // prevent events bubbling into iframes on that page during drag
     document.body.appendChild(pageOverlay);
@@ -1107,6 +1108,11 @@ function connectDragAndDrop(element) {
     document.removeEventListener('mouseup', mouseUp, { passive: true });
     document.removeEventListener('touchend', mouseUp, { passive: true });
     document.removeEventListener('touchcancel', mouseUp, { passive: true });
+    if (bodyStyleAdjusted) {
+      window.document.body.style.height = null;
+      window.document.body.style.overflow = null;
+    }
+    bodyStyleAdjusted = false;
   }
 
   function fixIosHover() {}

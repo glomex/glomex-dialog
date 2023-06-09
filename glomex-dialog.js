@@ -219,9 +219,12 @@ function adjustLightboxModeForLandscapeOnMobile(element) {
   if (window.matchMedia(mobileLandscapeSelector).matches) {
     // allow scrolling in mobile landscape
     // so that the user can scroll down to remove the browser bar
-    window.document.body.style.overflow = null;
+    if (this._bodyStyleAdjusted) {
+      window.document.body.style.overflow = null;
+    }
   } else {
     window.document.body.style.overflow = 'hidden';
+    this._bodyStyleAdjusted = true;
   }
 }
 
@@ -492,6 +495,7 @@ class GlomexDialogElement extends window.HTMLElement {
     this._wasInHiddenMode = false;
     this._internalModeChange = false;
     this._dockTargetResizeObserver = undefined;
+    this._bodyStyleAdjusted = false;
 
     this.addEventListener('click', ({ target }) => {
       if (this.classList.contains('dragging')) return;
@@ -509,6 +513,11 @@ class GlomexDialogElement extends window.HTMLElement {
   }
 
   connectedCallback() {
+    if (this._bodyStyleAdjusted) {
+      window.document.body.style.height = null;
+      window.document.body.style.overflow = null;
+    }
+    this._bodyStyleAdjusted = false;
     updateViewPortWidth(this);
     updatePlaceholderAspectRatio(this, getAspectRatioFromStrings([
       this.getAttribute('aspect-ratio'),
@@ -581,6 +590,11 @@ class GlomexDialogElement extends window.HTMLElement {
       this._dockTargetResizeObserver.disconnect();
       this._dockTargetResizeObserver = undefined;
     }
+    if (this._bodyStyleAdjusted) {
+      window.document.body.style.height = null;
+      window.document.body.style.overflow = null;
+    }
+    this._bodyStyleAdjusted = false;
   }
 
   static get observedAttributes() {
@@ -715,6 +729,7 @@ class GlomexDialogElement extends window.HTMLElement {
         // prevent scrolling
         window.document.body.style.height = '100%';
         window.document.body.style.overflow = 'hidden';
+        this._bodyStyleAdjusted = true;
         dialogContent.setAttribute('style', '');
         dialogInnerWrapper.setAttribute('style', '');
         dialogInnerWrapper.setAttribute('tabindex', '-1');
@@ -736,8 +751,10 @@ class GlomexDialogElement extends window.HTMLElement {
 
       if (newValue !== 'lightbox') {
         // reset prevent scrolling
-        window.document.body.style.height = null;
-        window.document.body.style.overflow = null;
+        if (this._bodyStyleAdjusted) {
+          window.document.body.style.height = null;
+          window.document.body.style.overflow = null;
+        }
         dialogInnerWrapper.removeAttribute('tabindex');
       }
 
@@ -1037,8 +1054,10 @@ function connectDragAndDrop(element) {
     disconnectListeners();
     dialogElement.style.pointerEvents = null;
     // reset scrolling
-    window.document.body.style.height = null;
-    window.document.body.style.overflow = null;
+    if (this._bodyStyleAdjusted) {
+      window.document.body.style.height = null;
+      window.document.body.style.overflow = null;
+    }
     if (pageOverlay.parentNode === document.body) {
       document.body.removeChild(pageOverlay);
     }
@@ -1057,6 +1076,7 @@ function connectDragAndDrop(element) {
     // prevent scrolling
     window.document.body.style.height = '100%';
     window.document.body.style.overflow = 'hidden';
+    this._bodyStyleAdjusted = true;
     // place an overlay above the whole document to
     // prevent events bubbling into iframes on that page during drag
     document.body.appendChild(pageOverlay);

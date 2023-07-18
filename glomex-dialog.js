@@ -213,21 +213,6 @@ function isInDocument(element, document) {
   return false;
 }
 
-function adjustLightboxModeForLandscapeOnMobile(element) {
-  if (element.getAttribute('mode') !== 'lightbox') return;
-  const mobileLandscapeSelector = `(max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape)`;
-  if (window.matchMedia(mobileLandscapeSelector).matches) {
-    // allow scrolling in mobile landscape
-    // so that the user can scroll down to remove the browser bar
-    if (this._bodyStyleAdjusted) {
-      window.document.body.style.overflow = null;
-    }
-  } else {
-    window.document.body.style.overflow = 'hidden';
-    this._bodyStyleAdjusted = true;
-  }
-}
-
 /**
  * A dialog web component that allows docking a video player or
  * putting it in a lightbox. It allows implementing a similar
@@ -540,7 +525,7 @@ class GlomexDialogElement extends window.HTMLElement {
     this._disconnectDragAndDrop = connectDragAndDrop(this);
 
     const onResize = () => {
-      adjustLightboxModeForLandscapeOnMobile(this);
+      this._adjustLightboxModeForLandscapeOnMobile();
       updateViewPortWidth(this);
       this.refreshDockDialog();
     };
@@ -741,7 +726,7 @@ class GlomexDialogElement extends window.HTMLElement {
         window.addEventListener('touchmove', this._onNonPassiveTouchMove, {
           passive: false,
         });
-        adjustLightboxModeForLandscapeOnMobile(this);
+        this._adjustLightboxModeForLandscapeOnMobile();
         if (this._rotateToFullscreen) {
           this._rotateToFullscreen.enable();
         }
@@ -859,6 +844,21 @@ class GlomexDialogElement extends window.HTMLElement {
           // ignore
         }
       }
+    }
+  }
+
+  _adjustLightboxModeForLandscapeOnMobile() {
+    if (this.getAttribute('mode') !== 'lightbox') return;
+    const mobileLandscapeSelector = `(max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape)`;
+    if (window.matchMedia(mobileLandscapeSelector).matches) {
+      // allow scrolling in mobile landscape
+      // so that the user can scroll down to remove the browser bar
+      if (this._bodyStyleAdjusted) {
+        window.document.body.style.overflow = null;
+      }
+    } else {
+      window.document.body.style.overflow = 'hidden';
+      this._bodyStyleAdjusted = true;
     }
   }
 

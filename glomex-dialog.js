@@ -773,6 +773,23 @@ class GlomexDialogElement extends window.HTMLElement {
         this.shadowRoot.querySelector('.dock-target').style,
         positions,
       );
+
+      // ensure to position from left by X% (e.g. 50% = center it)
+      const transform = [];
+      if (positions.top.match(/%$/)) {
+        transform.push(`translateY(-${positions.top})`);
+      } else if (positions.bottom.match(/%$/)) {
+        transform.push(`translateY(${positions.bottom})`);
+      }
+      if (positions.left.match(/%$/)) {
+        transform.push(`translateX(-${positions.left})`);
+      } else if (positions.right.match(/%$/)) {
+        transform.push(`translateX(${positions.right})`);
+      }
+
+      if (transform.length > 0) {
+        this.shadowRoot.querySelector('.dock-target').style.transform = transform.join(' ');
+      }
       this.refreshDockDialog();
     }
 

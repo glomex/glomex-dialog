@@ -1060,6 +1060,7 @@ function connectDragAndDrop(element) {
       dockTarget.style.top = `${clampTop}px`;
       dockTarget.style.bottom = 'auto';
       dockTarget.style.right = 'auto';
+      dockTarget.style.transform = null;
       element.refreshDockDialog();
     });
   };

@@ -46,7 +46,12 @@ const getAlternativeDockTarget = (element) => {
   const dockTarget = element.getAttribute('dock-target');
   let dockTargetElements;
   if (dockTarget) {
-    dockTargetElements = document.querySelectorAll(dockTarget);
+    try {
+      dockTargetElements = document.querySelectorAll(dockTarget);
+    } catch (e) {
+      // invalid selector strings should allow falling back to the default handling
+      return null;
+    }
     if (dockTargetElements.length === 0) return null;
     // pick the innermost node (querySelectorAll sorts by order in DOM)
     const dockTargetElement = dockTargetElements[dockTargetElements.length - 1];

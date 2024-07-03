@@ -3,8 +3,8 @@ import { RotataToFullscreen } from './rotate-to-fullscreen.js';
 const NON_VISIBLE_WIDTH = window.innerWidth < 720 ? 320 : 640;
 const DEFAULT_DOCK_TARGET_INSET = '0px 10px auto auto';
 const DEFAULT_TRANSITION_DURATION = 300;
-const DOCK_Z_INDEX = 2147483646;
 const LIGHTBOX_Z_INDEX = 2147483647;
+const DOCK_Z_INDEX = 2147483646;
 const MIN_DOCK_WIDTH = 192;
 const MAX_DOCK_WIDTH = 400;
 const PHONE_MAX_WIDTH = 480;
@@ -127,6 +127,7 @@ const moveFromTo = (element, {
     } else {
       element.style.transitionDuration = null;
     }
+
     if (!downscale) {
       // avoid as best as possible that the contained element is shortly scaled too large
       // somehow width+scale is not applied at the same time when the motion is too fast
@@ -291,22 +292,43 @@ class GlomexDialogElement extends window.HTMLElement {
       display: none;
     }
 
-    .dialog-content {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
+    .popover {
+      border: 0;
+      margin: 0;
+      padding: 0;
       width: 100%;
       height: 100%;
-      max-width: 100%;
+      background: transparent;
+    }
+
+    :host([mode=inline]) .popover {
+      display: block;
+      position: absolute;
+      width: 100%;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      top: 0;
+      left: 0;
+      overflow: visible;
+    }
+
+    .dialog-content {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: transparent;
       will-change: transform, transition, width, height, top, left, opacity;
     }
 
     .dialog-inner-wrapper {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
+      position: absolute;
+      top 0;
+      left: 0;
       max-width: 100%;
       will-change: transition, transform, width, height;
     }
@@ -392,6 +414,11 @@ class GlomexDialogElement extends window.HTMLElement {
     }
 
     :host([mode=lightbox]) .dialog-content {
+      display: flex;
+      max-height: 100dvh;
+      max-width: 100dvw;
+      align-items: center;
+      justify-content: center;
       animation-name: fade-in;
       animation-duration: 200ms;
       animation-timing-function: ease-in;
@@ -404,26 +431,37 @@ class GlomexDialogElement extends window.HTMLElement {
 
     :host([mode=lightbox]) .dialog-inner-wrapper {
       max-width: 80%;
-      margin: 5vh auto 0 auto;
-      position: relative;
     }
 
-    @media (max-width: 1024px) {
-      :host([mode=lightbox]) .dialog-inner-wrapper {
-        max-width: 95%;
-      }
-    }
-
-    :host([mode=lightbox]):before {
-      content: " ";
+    :host([mode=lightbox]) .dialog-content::backdrop {
+      width: 100%;
+      height: 100%;
       background: var(--lightbox-background, rgba(0, 0, 0, 0.5));
-      display: block;
-      position: fixed;
-      top: 0;
-      right: 0;
-      left: 0;
-      bottom: 0;
-      z-index: ${LIGHTBOX_Z_INDEX};
+      backdrop-filter: blur(4px) saturate(50%);
+    }
+
+    :host([mode=lightbox]) .dialog-inner-wrapper {
+      width: 100%;
+      position: unset;
+    }
+
+    :host([mode=lightbox]) slot[name="dialog-element"] {
+      display: flex;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      max-height: 100dvh;
+    }
+
+    @media (orientation: portrait) {
+      :host([mode=lightbox]) slot[name="dialog-element"] {
+        display: flex;
+        aspect-ratio: 9 / 16;
+        max-height: 100dvh;
+        max-width: 100dvw;
+      }
+      :host([mode=lightbox]) .dialog-inner-wrapper {
+        max-width: unset;
+      }
     }
 
     @media (max-device-width: ${PHONE_MAX_WIDTH}px) and (pointer: coarse) and (orientation: landscape) {
@@ -459,21 +497,23 @@ class GlomexDialogElement extends window.HTMLElement {
         <div class="placeholder-default"></div>
       </slot>
     </div>
-    <div class="dock-target">
-      <div class="aspect-ratio-box"></div>
-    </div>
-    <div class="dock-sticky-target">
-      <div class="aspect-ratio-box"></div>
-    </div>
-    <div class="dialog-content" part="dialog-content">
-      <div class="dialog-inner-wrapper">
-        <slot name="dock-background">
-          <div class="drag-handle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/></svg>
-          </div>
-        </slot>
-        <slot name="dialog-element"></slot>
+    <div class="popover" popover="manual">
+      <div class="dock-target">
+        <div class="aspect-ratio-box"></div>
       </div>
+      <div class="dock-sticky-target">
+        <div class="aspect-ratio-box"></div>
+      </div>
+      <dialog class="dialog-content" part="dialog-content">
+        <div class="dialog-inner-wrapper">
+          <slot name="dock-background">
+            <div class="drag-handle">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10zM.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708l-2-2zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8z"/></svg>
+            </div>
+          </slot>
+          <slot name="dialog-element"></slot>
+        </div>
+      </dialog>
     </div>`;
     const dockTarget = this.shadowRoot.querySelector('.dock-target');
     const positions = toPositions(DEFAULT_DOCK_TARGET_INSET);
@@ -606,6 +646,7 @@ class GlomexDialogElement extends window.HTMLElement {
     const dialogContent = this.shadowRoot.querySelector('.dialog-content');
     const dialogInnerWrapper = dialogContent.querySelector('.dialog-inner-wrapper');
     const placeholder = this.shadowRoot.querySelector('.placeholder');
+    const popover = this.shadowRoot.querySelector('.popover');
     const dockMode = this.getAttribute('dock-mode');
     const transitionDuration = DEFAULT_TRANSITION_DURATION;
     const aspectRatios = [
@@ -646,6 +687,7 @@ class GlomexDialogElement extends window.HTMLElement {
       });
 
       if (newValue === 'dock') {
+        if (popover.showPopover) popover.showPopover();
         // ensure to refresh dock-target states before transition
         this.refreshDockDialog();
         dialogContent.style.zIndex = DOCK_Z_INDEX;
@@ -682,6 +724,8 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogInnerWrapper.style.width = null;
           dialogContent.style.top = null;
           dialogContent.style.left = null;
+          // also ensure that "absolute" positioning works
+          if (popover.hidePopover) popover.hidePopover();
           if (!this._wasInHiddenMode && oldValue === 'dock') {
             dialogContent.style.transitionDuration = `${transitionDuration}ms`;
             dialogInnerWrapper.style.transitionDuration = null;
@@ -692,10 +736,13 @@ class GlomexDialogElement extends window.HTMLElement {
               dialogContent.setAttribute('style', '');
               dialogInnerWrapper.setAttribute('style', '');
               placeholder.style.visibility = 'hidden';
+              if (popover.hidePopover) popover.hidePopover();
             }
           }, transitionDuration);
         };
         if (oldValue === 'dock') {
+          // in order to transition with animation back from dock to inline
+          dialogContent.style.transitionDuration = `${transitionDuration}ms`;
           // reposition element without animation
           // so that new position with scroll gets calculated
           moveFromTo(dialogContent, {
@@ -731,6 +778,8 @@ class GlomexDialogElement extends window.HTMLElement {
         window.addEventListener('touchmove', this._onNonPassiveTouchMove, {
           passive: false,
         });
+        if (popover.showPopover) popover.showPopover();
+        dialogContent.showModal();
         this._adjustLightboxModeForLandscapeOnMobile();
         if (this._rotateToFullscreen) {
           this._rotateToFullscreen.enable();
@@ -745,11 +794,13 @@ class GlomexDialogElement extends window.HTMLElement {
           window.document.body.style.height = null;
           window.document.body.style.overflow = null;
         }
+        dialogContent.close();
         dialogInnerWrapper.removeAttribute('tabindex');
       }
 
       if (oldValue === 'lightbox' && this._rotateToFullscreen) {
         this._rotateToFullscreen.disable();
+        dialogContent.close();
       }
 
       this.dispatchEvent(
@@ -931,6 +982,7 @@ class GlomexDialogElement extends window.HTMLElement {
       stickyWidth = window.innerWidth * 0.9;
     }
 
+    dockStickyTarget.style.left = `${clientRect.left}px`;
     dockStickyTarget.style.width = `${stickyWidth}px`;
     dockStickyTarget.style.height = `${stickyWidth / getAspectRatioFromStrings(aspectRatios)}px`;
 

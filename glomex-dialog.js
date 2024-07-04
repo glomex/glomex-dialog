@@ -296,8 +296,6 @@ class GlomexDialogElement extends window.HTMLElement {
       border: 0;
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
       background: transparent;
     }
 
@@ -305,9 +303,7 @@ class GlomexDialogElement extends window.HTMLElement {
       display: block;
       position: absolute;
       width: 100%;
-      border: 0;
-      padding: 0;
-      margin: 0;
+      height: 100%;
       top: 0;
       left: 0;
       overflow: visible;
@@ -326,6 +322,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
     .dialog-inner-wrapper {
       width: 100%;
+      height: 100%;
       position: absolute;
       top 0;
       left: 0;
@@ -426,11 +423,7 @@ class GlomexDialogElement extends window.HTMLElement {
       top: 0;
       left: 0;
       z-index: ${LIGHTBOX_Z_INDEX};
-      overflow: auto;
-    }
-
-    :host([mode=lightbox]) .dialog-inner-wrapper {
-      max-width: 80%;
+      overflow: hidden;
     }
 
     :host([mode=lightbox]) .dialog-content::backdrop {
@@ -440,9 +433,21 @@ class GlomexDialogElement extends window.HTMLElement {
       backdrop-filter: blur(4px) saturate(50%);
     }
 
+    :host([mode=lightbox]) .dialog-content slot[name="dock-background"] {
+      display: none;
+    }
+
     :host([mode=lightbox]) .dialog-inner-wrapper {
+      max-width: 80%;
       width: 100%;
       position: unset;
+      height: unset;
+    }
+
+    @media (max-width: 1024px) {
+      :host([mode=lightbox]) .dialog-inner-wrapper {
+        max-width: 95%;
+      }
     }
 
     :host([mode=lightbox]) slot[name="dialog-element"] {
@@ -703,6 +708,9 @@ class GlomexDialogElement extends window.HTMLElement {
           downscale: this.getAttribute('dock-downscale'),
           transitionDuration,
         }).then(({ scale }) => {
+          if (oldValue === 'lightbox') {
+            this.refreshDockDialog();
+          }
           if (this.getAttribute('dock-downscale')) {
             this.dispatchEvent(
               new CustomEvent('dockscale', {
@@ -715,6 +723,9 @@ class GlomexDialogElement extends window.HTMLElement {
         });
       } else if (newValue === 'inline') {
         const goToInline = () => {
+          // also ensure that "absolute" positioning works
+          if (popover.hidePopover) popover.hidePopover();
+
           // somehow this avoids CLS when switching between
           // position "fixed" => "absolute"
           dialogContent.style.display = 'grid';
@@ -724,8 +735,6 @@ class GlomexDialogElement extends window.HTMLElement {
           dialogInnerWrapper.style.width = null;
           dialogContent.style.top = null;
           dialogContent.style.left = null;
-          // also ensure that "absolute" positioning works
-          if (popover.hidePopover) popover.hidePopover();
           if (!this._wasInHiddenMode && oldValue === 'dock') {
             dialogContent.style.transitionDuration = `${transitionDuration}ms`;
             dialogInnerWrapper.style.transitionDuration = null;
@@ -756,7 +765,9 @@ class GlomexDialogElement extends window.HTMLElement {
             downscale: this.getAttribute('dock-downscale'),
             transitionDuration,
           }).then(() => {
-            goToInline();
+            window.requestAnimationFrame(() => {
+              goToInline();
+            });
           });
         } else if (oldValue !== 'inline') {
           goToInline();

@@ -297,6 +297,7 @@ class GlomexDialogElement extends window.HTMLElement {
       margin: 0;
       padding: 0;
       background: transparent;
+      display: block;
     }
 
     :host([mode=inline]) .popover {

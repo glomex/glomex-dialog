@@ -440,7 +440,6 @@ class GlomexDialogElement extends window.HTMLElement {
 
     :host([mode=lightbox]) .dialog-inner-wrapper {
       max-width: 80%;
-      width: 100%;
       position: unset;
       height: unset;
     }
@@ -460,10 +459,7 @@ class GlomexDialogElement extends window.HTMLElement {
 
     @media (orientation: portrait) {
       :host([mode=lightbox]) slot[name="dialog-element"] {
-        display: flex;
         aspect-ratio: 9 / 16;
-        max-height: 100dvh;
-        max-width: 100dvw;
       }
       :host([mode=lightbox]) .dialog-inner-wrapper {
         max-width: unset;

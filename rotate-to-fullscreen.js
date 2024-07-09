@@ -26,7 +26,7 @@ export class RotataToFullscreen extends EventTarget {
     element.addEventListener('fullscreenchange', this._onIframeFullscreenChange);
 
     const isInLandscape = screen.orientation.type.indexOf('landscape') === 0;
-    if (this._rootNode.fullscreenElement === null && isInLandscape) {
+    if (this._rootNode.fullscreenElement === null && isInLandscape && element.requestFullscreen) {
       element.requestFullscreen().catch(() => {});
     }
   }
@@ -44,8 +44,8 @@ export class RotataToFullscreen extends EventTarget {
       // can update on his own
       this.dispatchEvent(new window.CustomEvent('exit', {
         detail: {
-          orientation: screen.orientation.type
-        }
+          orientation: screen.orientation.type,
+        },
       }));
     }
 
@@ -60,9 +60,10 @@ export class RotataToFullscreen extends EventTarget {
     if (
       this._rootNode.fullscreenElement === null
       && screen.orientation.type.indexOf('landscape') === 0
+      && element.requestFullscreen
     ) {
       element.requestFullscreen().catch(() => {});
-    } else {
+    } else if (document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
     }
   }
@@ -73,8 +74,8 @@ export class RotataToFullscreen extends EventTarget {
     if (this._rootNode.fullscreenElement === null) {
       this.dispatchEvent(new window.CustomEvent('exit', {
         detail: {
-          orientation: screen.orientation.type
-        }
+          orientation: screen.orientation.type,
+        },
       }));
     } else {
       this.dispatchEvent(new window.CustomEvent('enter'));

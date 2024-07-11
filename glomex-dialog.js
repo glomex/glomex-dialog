@@ -680,7 +680,9 @@ class GlomexDialogElement extends window.HTMLElement {
         || newValue === 'dock'
         || newValue === 'inline'
       )) {
-        placeholder.style.display = 'none';
+        if (newValue !== 'inline') {
+          placeholder.style.display = 'none';
+        }
         placeholder.style.visibility = 'hidden';
       } else {
         placeholder.style.display = null;
